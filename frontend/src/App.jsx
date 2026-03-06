@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import LoginForm from './pages/LoginForm';
 import RegisterForm from './pages/RegisterForm';
 import FormContac from './pages/FormContac';
+import FormCredito from './pages/FormCredito';
+import AdminDashboard from './pages/AdminDashboard';
 
 // 🛡️ Componente para proteger rutas según el ROL
 const ProtectedRoute = ({ children, allowedRole }) => {
@@ -25,33 +27,41 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* RUTA PÚBLICA: El Login siempre es la primera pantalla */}
+        {/* RUTAS PÚBLICAS */}
         <Route path="/" element={<LoginForm />} />
+        <Route path="/signup" element={<RegisterForm />} />
 
-        {/* RUTAS PROTEGIDAS PARA ADMINISTRADOR */}
+        {/* RUTAS PROTEGIDAS PARA ADMIN */}
         <Route 
           path="/admin-dashboard" 
           element={
             <ProtectedRoute allowedRole="admin">
-              {/* <AdminDashboard /> */}
+              <AdminDashboard />
             </ProtectedRoute>
           } 
         />
 
-        {/* RUTAS PROTEGIDAS PARA USUARIOS NORMALES */}
+        {/* RUTAS PROTEGIDAS PARA USUARIOS */}
         <Route 
-          path="/user-profile" 
+          path="/form-contac" 
           element={
             <ProtectedRoute allowedRole="user">
-              {/* <UserProfile /> */}
+              <FormContac />
             </ProtectedRoute>
           } 
         />
 
-        {/* RUTA 404: Si escriben cualquier cosa, regresan al login o su perfil */}
+        <Route 
+          path="/form-credito" 
+          element={
+            <ProtectedRoute allowedRole="user">
+              <FormCredito />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* RUTA 404 */}
         <Route path="*" element={<Navigate to="/" replace />} />
-        <Route path="/signup" element={<RegisterForm />} />
-        <Route path="/form-contac" element={<FormContac />} />
       </Routes>
     </Router>
   );

@@ -175,6 +175,7 @@ body {
   padding: 40px;
   border-radius: 8px;
   box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.05);
+  position: fixed;
   /* Eliminamos el margin: 0 auto porque Flexbox ya se encarga del centrado */
 }
 
@@ -361,7 +362,7 @@ body {
   }
 }
 
-/* ******************* FormContac ****************************** */
+/* ******************* Fin FormContac ****************************** */
 
 
 /* Ajustes para pantallas pequeñas (móviles) */
