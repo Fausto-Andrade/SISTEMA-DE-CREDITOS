@@ -1,11 +1,21 @@
 import Navbar from '../components/Navbar.jsx';
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api/auth';
 import '../App.css';
 
 const AdminDashboard = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showFormRuta, setShowFormRuta] = useState(false);
+  const navigate = useNavigate();
+
+const handleRutaCreada = () => {
+    console.log("Formulario padre notificado de nueva ruta");
+
+    // Podrías ocultar el formulario automáticamente
+    // setShowFormRuta(false); 
+  };
 
   useEffect(() => {
     const obtenerUsuarios = async () => {
@@ -37,16 +47,16 @@ return (
         backgroundColor: '#f4f7fe'
       }}>
 
-  {/* 1. Fondo de toda la página */}
-  <div style={{ 
-    // backgroundColor: '#f0f2f5', 
-    minHeight: '100vh', 
-    width: '100%',
-    display: 'flex', 
-    justifyContent: 'center', // Centrado horizontal
-    alignItems: 'center',     // Centrado vertical
-    padding: '40px 0' 
-  }}>
+      {/* 1. Fondo de toda la página */}
+      <div style={{ 
+        // backgroundColor: '#f0f2f5', 
+        minHeight: '100vh', 
+        width: '100%',
+        display: 'flex', 
+        justifyContent: 'center', // Centrado horizontal
+        alignItems: 'center',     // Centrado vertical
+        padding: '40px 0' 
+      }}>
     
     {/* 2. El "Card" o caja que contiene la tabla */}
     <div style={{ 
@@ -71,6 +81,17 @@ return (
         borderBottom: '1px solid #eee'
       }}>
         <h2 style={{ margin: 0, fontSize: '24px', color: '#1a1a1a' }}>Listado de Cobradores</h2>
+	
+	{/* Botón para mostrar/ocultar el formulario (UX) */}
+          <div style={{ textAlign: 'right', marginBottom: '20px'}}>
+            <button 
+            onClick={() => navigate('/crear-ruta')}
+            className="register-button" // Reutilizamos tu clase de estilo
+            style={{ width: 'auto', padding: '10px 25px', color: 'white', backgroundColor: '#6A64F1'}}
+          >
+            + Crear Ruta
+          </button>
+          </div>
         
       </header>
 
@@ -82,11 +103,12 @@ return (
           margin: '0 auto' // Centra la tabla dentro de su div
         }}>
           <thead>
-            <tr style={{ backgroundColor: '#4e73df', color: 'white' }}>
+            <tr style={{ backgroundColor: '#6A64F1', color: 'white' }}>
               <th style={styles.th}>ID</th>
               <th style={styles.th}>Usuario</th>
               <th style={styles.th}>Email</th>
               <th style={styles.th}>Rol</th>
+              {/* <th style={styles.th}>Ruta</th> */}
             </tr>
           </thead>
           <tbody>

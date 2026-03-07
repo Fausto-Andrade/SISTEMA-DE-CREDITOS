@@ -162,6 +162,38 @@ router.get('/clientes', async (req, res) => {
   }
 });
 
+// Lógica para llenar los campos de la base de datos de la tabla rutas.
+router.post('/rutas', async (req, res) => {
+  try {
+    // Extraemos los datos que vienen desde el frontend
+    // Asegúrate de que el estado en tu FormCrearRuta tenga estos nombres exactos
+    const { fecha, id_user, zona } = req.body;
+
+    // Validación básica
+    if (!fecha || !id_user || !zona) {
+      return res.status(400).json({ message: "Todos los campos son obligatorios" });
+    }
+
+    // Consulta SQL para insertar en tu tabla
+    const query = `
+      INSERT INTO rutas (fecha, id_user, zona) 
+      VALUES ($1, $2, $3) 
+      RETURNING *
+    `;
+    
+    const result = await pool.query(query, [fecha, id_user, zona]);
+
+    res.status(201).json({ 
+      message: "Ruta creada con éxito", 
+      data: result.rows[0] 
+    });
+
+  } catch (err) {
+    console.error("Error en POST /rutas:", err.message);
+    res.status(500).json({ message: "Error al guardar en la base de datos" });
+  }
+});
+
 // Lógica en el Backend para el registrar el conscutivo del credito
 router.post('/creditos', async (req, res) => {
   const { cliente_id, monto, cuotas, interes, fecha_inicio } = req.body;

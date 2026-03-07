@@ -1,11 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /* Esto asegura que el fondo ocupe TODA la pantalla sin márgenes raros */
-html, body {
+html, body #root {
   margin: 0;
   padding: 0;
   height: 100%;
   width: 100%;
+  min-height: 100vh;
 }
 
 .login-container {
@@ -15,7 +16,8 @@ html, body {
   width: 100vw;                  /* 100% del ancho de la ventana */
   height: 100vh;                 /* 100% de la altura de la ventana */
   background-color: #f3f4f6;     /* Color de fondo para verificar que ocupa todo */
-  position: fixed;               /* Lo fija a la pantalla para evitar scroll innecesario */
+  /* position: fixed;               Lo fija a la pantalla para evitar scroll innecesario */
+  min-height: 100vh;
   top: 0;
   left: 0;
 }
@@ -155,16 +157,14 @@ body {
 
 /* 1. Aseguramos que el contenedor ocupe el 100% de la pantalla */
 .formbold-main-wrapper {
-  display: flex !important;  /* Forzamos el uso de Flexbox */
-  align-items: center;      /* Centrado vertical */
-  justify-content: center;   /* Centrado horizontal */
-  min-height: 100vh;        /* 100% de la altura de la ventana (Viewport Height) */
-  width: 100vw;  
-  padding: 20px;            /* Padding reducido para que en móviles no se corte */
-  background-color: #f9fafb; /* Color de fondo consistente */              
-  height: 100vh;                 /* 100% de la altura de la ventana */
-  /* position: fixed;               Lo fija a la pantalla para evitar scroll innecesario */
-  top: 0;
+  display: flex !important; 
+  align-items: center;      /* Centra verticalmente */
+  justify-content: center;  /* Centra horizontalmente */
+  min-height: 100vh;        /* Altura mínima de la ventana */
+  width: 100%;              /* Usar 100% en lugar de 100vw para evitar scrollbar */
+  padding: 20px;            /* Espacio para que no toque los bordes */
+  background-color: #f9fafb;
+
 }
 
 /* 2. La caja del formulario */
@@ -175,8 +175,6 @@ body {
   padding: 40px;
   border-radius: 8px;
   box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.05);
-  position: fixed;
-  /* Eliminamos el margin: 0 auto porque Flexbox ya se encarga del centrado */
 }
 
 .formbold-form-wrapper img {

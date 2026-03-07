@@ -4,6 +4,7 @@ import RegisterForm from './pages/RegisterForm';
 import FormContac from './pages/FormContac';
 import FormCredito from './pages/FormCredito';
 import AdminDashboard from './pages/AdminDashboard';
+import FormCrearRuta from './pages/FormCrearRuta';
 
 // 🛡️ Componente para proteger rutas según el ROL
 const ProtectedRoute = ({ children, allowedRole }) => {
@@ -32,36 +33,33 @@ function App() {
         <Route path="/signup" element={<RegisterForm />} />
 
         {/* RUTAS PROTEGIDAS PARA ADMIN */}
-        <Route 
-          path="/admin-dashboard" 
-          element={
-            <ProtectedRoute allowedRole="admin">
-              <AdminDashboard />
+        <Route path="/admin-dashboard" element={<ProtectedRoute allowedRole="admin">
+          <AdminDashboard />
             </ProtectedRoute>
           } 
         />
 
         {/* RUTAS PROTEGIDAS PARA USUARIOS */}
-        <Route 
-          path="/form-contac" 
-          element={
-            <ProtectedRoute allowedRole="user">
-              <FormContac />
+        <Route path="/form-contac" element={<ProtectedRoute allowedRole="user">
+          <FormContac />
             </ProtectedRoute>
           } 
         />
 
-        <Route 
-          path="/form-credito" 
-          element={
-            <ProtectedRoute allowedRole="user">
-              <FormCredito />
+        <Route path="/form-credito" element={<ProtectedRoute allowedRole="user">
+          <FormCredito />
             </ProtectedRoute>
           } 
         />
 
         {/* RUTA 404 */}
         <Route path="*" element={<Navigate to="/" replace />} />
+
+        {/* RUTA PROTEGIDA PARA ADMIN */}
+          <Route path="/crear-ruta" element={<ProtectedRoute allowedRole="admin">
+              <FormCrearRuta />
+                </ProtectedRoute>
+          } />
       </Routes>
     </Router>
   );

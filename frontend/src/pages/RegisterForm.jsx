@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { useNavigate } from 'react-router-dom';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import api from '../api/auth';
 
 const RegisterForm = () => {
   const [errorServer, setErrorServer] = useState('');
+  const [ showPassword, setShowPassword] = useState(false); // Estado para alternar la visibilidad
   const navigate = useNavigate();
   
   // Usamos solo React Hook Form para capturar los datos
@@ -60,69 +62,85 @@ const RegisterForm = () => {
         <h1 className="login-title">Crear una cuenta</h1>
         {errorServer && <p style={{ color: 'red', textAlign: 'center' }}>{errorServer}</p>}
         
-        {/* CORRECCIÓN: handleSubmit(onSubmit) */}
         <form onSubmit={handleSubmit(onSubmit)} className="login-form" autoComplete="off">
           
-          <input
-            type="text"
-            placeholder="Nombre"
-            className="form-input"
-            autoFocus
-            {...register('username', { required: "El nombre es obligatorio" })}
+          <div className="input-group">
+            <input
+              type="text"
+              placeholder="Nombre"
+              className="form-input"
+              {...register('username', { required: "El nombre es obligatorio" })}
             />
             {errors.username && <span className="error-text">{errors.username.message}</span>}
+          </div>
 
-          <input
-            type="email"
-            placeholder="Correo electrónico"
-            className="form-input"
-            {...register('email', { 
-            required: "El correo es obligatorio",
-            pattern: {
-                        value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                        message: "Formato de correo inválido"
-                    }
-          })}
+          <div className="input-group">
+            <input
+              type="email"
+              placeholder="Correo electrónico"
+              className="form-input"
+              {...register('email', { 
+                required: "El correo es obligatorio",
+                pattern: {
+                  value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                  message: "Formato de correo inválido"
+                }
+              })}
             />
             {errors.email && <span className="error-text">{errors.email.message}</span>}
+          </div>
 
-          <input
-            type="password"
-            placeholder="Contraseña"
-            autoComplete="new-password"
-            className="form-input"
-            {...register('password', { required: "La contraseña es obligatoria" })}
+          {/* CONTENEDOR DE CONTRASEÑA CON OJO */}
+          <div className="input-group" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <input
+              type={showPassword ? "text" : "password"} // 4. TYPE DINÁMICO
+              placeholder="Contraseña"
+              autoComplete="new-password"
+              className="form-input"
+              style={{ width: '100%', paddingRight: '40px' }}
+              {...register('password', { required: "La contraseña es obligatoria", minLength: { value: 6, message: "Mínimo 6 caracteres" } })}
             />
-            {errors.password && <span className="error-text">{errors.password.message}</span>}
+            <span 
+              onClick={() => setShowPassword(!showPassword)} // 5. FUNCIÓN CORREGIDA
+              style={{
+                position: 'absolute',
+                right: '15px',
+                cursor: 'pointer',
+                color: '#636e72',
+                display: 'flex',
+                zIndex: 10
+              }}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </span>
+          </div>
+          {errors.password && <span className="error-text">{errors.password.message}</span>}
           
-          <select 
-            className="form-input"
-            {...register('role')} // Vinculamos el select
-          >
+          <select className="form-input" {...register('role')}>
             <option value="user">User</option>
             <option value="admin">Admin</option>
           </select>
 
           <button 
-              type="submit" 
-              className="register-button" 
-              disabled={!isValid} // Se deshabilita si algún campo falta o es inválido
-              style={{
-                cursor: isValid ? 'pointer' : 'not-allowed',
-                opacity: isValid ? 1 : 0.5,
-                backgroundColor: isValid ? '#6A64F1' : '#ccc', // El color morado de tu imagen o gris
-                color: 'white',
-                padding: '12px',
-                borderRadius: '8px',
-                border: 'none',
-                width: '100%',
-                fontWeight: 'bold',
-                fontSize: '16px'
-              }}
+            type="submit" 
+            className="register-button" 
+            disabled={!isValid}
+            style={{
+              cursor: isValid ? 'pointer' : 'not-allowed',
+              opacity: isValid ? 1 : 0.5,
+              backgroundColor: isValid ? '#6A64F1' : '#ccc',
+              color: 'white',
+              padding: '12px',
+              borderRadius: '8px',
+              border: 'none',
+              width: '100%',
+              fontWeight: 'bold',
+              fontSize: '16px',
+              marginTop: '10px'
+            }}
           >
-              Registrar
+            Registrar
           </button>
-                      
         </form>
         
         <div className="signup-text">

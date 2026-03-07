@@ -1,5 +1,5 @@
 import React, { useState, useEffect} from 'react';
-// import React, { useEffect } from 'react';
+import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import api from '../api/auth';
@@ -7,7 +7,8 @@ import '../App.css';
 
 const LoginForm = () => {
   const navigate = useNavigate();
-  const [error, setError] = useState("");
+  const [ error, setError] = useState(""); 
+  const [ showPassword, setShowPassword] = useState(false); // Estado para alternar la visibilidad
   const { 
     register, 
     handleSubmit, 
@@ -67,19 +68,37 @@ const LoginForm = () => {
                         message: "Formato de correo inválido"
                     }            
             })}              
-            />
+            />         
+
             {errors.email && <span className="error-text">{errors.email.message}</span>}
           </div>
 
-          <div className="input-group">
+          <div className="input-group" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Contraseña"
               autoComplete="new-password"
+              className="form-input"
+              style={{ width: '100%', paddingRight: '40px' }}
               {...register('password', { 
                 required: "La contraseña es obligatoria" })}
-                className="form-input"
             />
+
+             {/* 4. Botón para alternar el estado */}
+            <span 
+              onClick={() => setShowPassword(!showPassword)} 
+              style={{
+                position: 'absolute',
+                right: '15px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                color: '#636e72', // Gris elegante
+                zIndex: 10 // Para asegurar que esté por encima del input
+              }}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}     
+            </span>
             {errors.password && <span className="error-text">{errors.password.message}</span>}
           </div>
 

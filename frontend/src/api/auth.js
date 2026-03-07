@@ -1,14 +1,9 @@
-// Importa la librería Axios, se usa para hacer peticiones HTTP desde el frontend
-// Permite hacer: GET, POST, PUT, DELETE
 import axios from 'axios';
 
-// Crea una instancia personalizada de Axios, en vez de usar axios.get()
-// directamente, usarás api.get(), esto permite configurar cosas globales (como la URL base).
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api', // La URL de tu Backend, todas las peticiones usarán automáticamente esa dirección.
+  baseURL: 'http://localhost:5000/api', 
 });
 
-// 🛡️ Este "Interceptor" inyecta el token automáticamente en cada petición
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -17,5 +12,12 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Exporta la instancia, permite usarla en otros archivos.
+// Exportación nombrada para los servicios
+export const rutasApi = {
+  crear: (data) => api.post('/rutas', data),
+  // Nota: sin la barra inicial para evitar el error de duplicación /api/api/
+  obtenerCobradores: () => api.get('usuarios-registrados'), 
+};
+
+// Exportación por defecto para la instancia de axios
 export default api;
