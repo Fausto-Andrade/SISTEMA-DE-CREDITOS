@@ -177,7 +177,24 @@ const onSubmit = async (data) => {
               Guardar Ruta
             </button>
             
-            
+            {/* NUEVO BOTÓN PARA VOLVER */}
+          <button 
+            type="button"
+            onClick={() => navigate('/admin-dashboard')} // Ajusta la ruta si es diferente
+            style={{
+              flex: 1,
+              padding: '12px',
+              backgroundColor: '#6A64F1',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            Volver
+          </button>
+
           </form>
         </div>
       </div>

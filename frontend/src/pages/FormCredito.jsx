@@ -1,150 +1,132 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/auth';
+import Swal from 'sweetalert2';
 
 const FormCredito = () => {
-  const [clientes, setClientes] = useState([]);
-  const [mensaje, setMensaje] = useState("");
-  const [proximoNumero, setProximoNumero] = useState(null);
-  const [totalPagar, setTotalPagar] = useState(0);
+  const { search } = useLocation();
+  const navigate = useNavigate();
+  const query = new URLSearchParams(search);
+  const idDesdeUrl = query.get('clienteId');
 
-  // 1. Extraemos 'isValid' de formState
-  const { 
-    register, 
-    handleSubmit, 
-    reset, 
-    watch, 
-    formState: { errors, isValid } 
-  } = useForm({
-    mode: "onChange" // "onChange" es vital para que valide mientras el usuario escribe
+  const [clientes, setClientes] = useState([]);
+
+  const { register, handleSubmit, watch, formState: { isValid } } = useForm({
+    mode: "onChange",
+    defaultValues: { cliente_id: idDesdeUrl || "" }
   });
 
-  const clienteSeleccionado = watch("cliente_id");
-  const monto = watch("monto");
-  const cuotas = watch("cuotas");
-  const interes = watch("interes");
-  const fecha = watch("fecha_inicio");
-
+  // Cargar Clientes
   useEffect(() => {
-    const obtenerClientes = async () => {
+    const fetchClientes = async () => {
       try {
-        const response = await api.get('/clientes');
-        setClientes(response.data);
-      } catch (error) {
-        console.error("Error al obtener clientes", error);
+        const resClientes = await api.get('/clientes');
+        setClientes(resClientes.data);
+      } catch (err) {
+        console.error("Error cargando clientes:", err);
       }
     };
-    obtenerClientes();
+    fetchClientes();
   }, []);
 
-  useEffect(() => {
-    if (clienteSeleccionado) {
-      const consultarConsecutivo = async () => {
-        try {
-          const response = await api.get(`/creditos/conteo/${clienteSeleccionado}`);
-          setProximoNumero(parseInt(response.data.count) + 1);
-        } catch (error) {
-          setProximoNumero(null);
-        }
-      };
-      consultarConsecutivo();
-    }
-  }, [clienteSeleccionado]);
+  const monto = watch("monto") || 0;
+  const interes = watch("interes") || 0;
+  const totalPagar = parseFloat(monto) + (parseFloat(monto) * (parseFloat(interes) / 100));
 
-  useEffect(() => {
-    const m = parseFloat(monto) || 0;
-    const i = parseFloat(interes) || 0;
-    if (m > 0) {
-      const total = m + (m * (i / 100)); 
-      setTotalPagar(total.toFixed(2));
-    } else {
-      setTotalPagar(0);
-    }
-  }, [monto, interes]);
+  const guardarCredito = async (data) => {
+  try {
+    const token = localStorage.getItem('token');
+    // Ya no enviamos numero_credito_cliente, la BD lo hace sola
+    const dataFinal = { 
+      ...data, 
+      cliente_id: parseInt(idDesdeUrl || data.cliente_id),
+      total_pagar: totalPagar 
+    };
 
-  const onSubmit = async (data) => {
-    try {
-      const dataFinal = { ...data, total_pagar: totalPagar };
-      const response = await api.post('/creditos', dataFinal); 
-      if (response.status === 201) {
-        alert(`Crédito registrado con éxito`);
-        reset();
-        setTotalPagar(0);
-      }
-    } catch (error) {
-      setMensaje("Error al registrar el crédito");
-    }
-  };
+    const response = await api.post('/creditos', dataFinal, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    Swal.fire('¡Éxito!', `Crédito N° ${response.data.numero_credito_cliente} registrado`, 'success');
+    navigate('/creditos/cobrador');
+  } catch (error) {
+    Swal.fire('Error', 'No se pudo registrar el crédito', 'error');
+  }
+};
 
   return (
     <div className="formbold-main-wrapper">
       <div className="formbold-form-wrapper">
-        <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
-          <div className="formbold-form-title">
-            <h2>Solicitud de Crédito</h2>
-            <p>Llene todos los campos para habilitar el botón.</p>
+        <form onSubmit={handleSubmit(guardarCredito)} autoComplete="off">
+          
+          {/* Cliente */}
+          <div className="formbold-mb-3">
+            <label>Cliente</label>
+            {idDesdeUrl ? (
+              <div className="formbold-form-input" style={{ backgroundColor: '#f0f0f0' }}>
+                {clientes.find(c => c.id == idDesdeUrl)?.name || "Cargando..."}
+              </div>
+            ) : (
+              <select className="formbold-form-input" {...register('cliente_id', { required: true })}>
+                <option value="">Seleccione un cliente...</option>
+                {clientes.map(c => <option key={c.id} value={c.id}>{c.name} {c.apellido}</option>)}
+              </select>
+            )}
+          </div>
+
+          {/* Fila: N° Crédito (Previsualización) y Monto */}
+          <div style={{ display: 'flex', gap: '20px' }}>
+            <div className="formbold-mb-3" style={{ flex: 1 }}>
+              <label>N° Crédito</label>
+              <input 
+                type="text" 
+                value="Se generará automáticamente"
+                className="formbold-form-input" 
+                readOnly 
+                style={{ backgroundColor: '#f0f0f0', color: '#999', fontWeight: 'bold' }} 
+              />
+            </div>
+            <div className="formbold-mb-3" style={{ flex: 1 }}>
+              <label>Monto</label>
+              <input 
+                type="number" 
+                step="0.01" 
+                {...register('monto', { required: true })} 
+                className="formbold-form-input" 
+              />
+            </div>
+          </div>
+
+          {/* Fila: Cuotas e Interés */}
+          <div style={{ display: 'flex', gap: '20px' }}>
+            <div className="formbold-mb-3" style={{ flex: 1 }}>
+              <label>Cuotas</label>
+              <input type="number" {...register('cuotas', { required: true })} className="formbold-form-input" />
+            </div>
+            <div className="formbold-mb-3" style={{ flex: 1 }}>
+              <label>Interés (%)</label>
+              <input type="number" step="0.1" {...register('interes', { required: true })} className="formbold-form-input" />
+            </div>
           </div>
 
           <div className="formbold-mb-3">
-            <label className="formbold-form-label">Cliente</label>
-            <select className="formbold-form-input" {...register('cliente_id', { required: true })}>
-              <option value="">Seleccione...</option>
-              {clientes.map(c => (
-                <option key={c.id} value={c.id}>{c.name} {c.apellido}</option>
-              ))}
-            </select>
-            {proximoNumero && <p style={{color: '#6A64F1', fontSize: '13px'}}>Crédito N° {proximoNumero}</p>}
-          </div>
-
-          <div className="formbold-input-flex">
-            <div>
-              <label className="formbold-form-label">Monto Capital ($)</label>
-              <input type="number" className="formbold-form-input" {...register('monto', { required: true, min: 1 })} />
-            </div>
-            <div>
-              <label className="formbold-form-label">Cuotas</label>
-              <input type="number" className="formbold-form-input" {...register('cuotas', { required: true, min: 1 })} />
-            </div>
-          </div>
-
-          <div className="formbold-input-flex">
-            <div>
-              <label className="formbold-form-label">Tasa de Interés (%)</label>
-              <input type="number" step="0.1" className="formbold-form-input" {...register('interes', { required: true })} />
-            </div>
-            <div>
-              <label className="formbold-form-label">Fecha Inicio</label>
-              <input type="date" className="formbold-form-input" {...register('fecha_inicio', { required: true })} />
-            </div>
-          </div>
-
-          <div className="formbold-mb-3">
-            <label className="formbold-form-label">Total a Pagar</label>
+            <label>Total a Pagar:</label>
             <input 
               type="text" 
+              value={new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(totalPagar)} 
               className="formbold-form-input" 
-              value={`$ ${totalPagar}`} 
               readOnly 
-              style={{ backgroundColor: '#f9f9f9', fontWeight: 'bold' }}
+              style={{ color: '#2ecc71', fontWeight: 'bold' }} 
             />
           </div>
 
-          {/* BOTÓN CON PROPIEDAD DISABLED */}
-          <button 
-            type="submit" 
-            className="formbold-btn"
-            disabled={!isValid} // Se deshabilita si isValid es false
-            style={{
-                backgroundColor: !isValid ? '#ccc' : '#6A64F1',
-                cursor: !isValid ? 'not-allowed' : 'pointer',
-                opacity: !isValid ? 0.7 : 1
-            }}
-          >
-            Generar Crédito
-          </button>
-          
-          {!isValid && <p style={{color: '#6A64F1', fontSize: '12px', marginTop: '10px'}}>* Complete todos los campos para continuar</p>}
-          {mensaje && <p>{mensaje}</p>}
+          <div className="formbold-mb-3">
+            <label>Fecha de Inicio</label>
+            <input type="date" {...register('fecha_inicio', { required: true })} className="formbold-form-input" />
+          </div>
+
+          <button type="submit" className="formbold-btn" disabled={!isValid}>Confirmar Crédito</button>
         </form>
       </div>
     </div>

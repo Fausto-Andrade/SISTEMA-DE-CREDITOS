@@ -76,9 +76,10 @@ const styles = {
     boxSizing: 'border-box',
     boxShadow: '0 2px 10px rgba(0,0,0,0.3)'
   },
+
   logo: { fontSize: '22px', fontWeight: 'bold' },
   linkLogo: { color: 'white', textDecoration: 'none' },
-  roleTag: { fontSize: '12px', color: '#646cff', textTransform: 'uppercase' },
+  // roleTag: { fontSize: '12px', color: '#646cff', textTransform: 'uppercase' },
   navLinks: { 
     display: 'flex', 
     listStyle: 'none', 
@@ -87,6 +88,7 @@ const styles = {
     padding: 0,
     alignItems: 'center' 
   },
+
   link: { 
     color: 'white', 
     textDecoration: 'none', 
@@ -94,6 +96,7 @@ const styles = {
     fontWeight: '500',
     transition: 'color 0.3s'
   },
+
   logoutBtn: {
     backgroundColor: '#ff4757',
     color: 'white',

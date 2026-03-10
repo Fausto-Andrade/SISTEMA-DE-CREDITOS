@@ -19,5 +19,10 @@ export const rutasApi = {
   obtenerCobradores: () => api.get('usuarios-registrados'), 
 };
 
+// api/auth.js (o donde tengas tus llamadas axios)
+export const clientesApi = {
+  getAll: () => api.get('/clientes'),
+};
+
 // Exportación por defecto para la instancia de axios
 export default api;

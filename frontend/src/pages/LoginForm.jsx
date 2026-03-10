@@ -39,7 +39,7 @@ const LoginForm = () => {
     if (user.role === 'admin') {
       navigate('/admin-dashboard');
     } else {
-      navigate('/form-contac'); // Asegúrate que coincida con App.js
+      navigate('/clientes'); // Asegúrate que coincida con App.js
     }
   } catch (err) {
     console.error("Error en login:", err);
@@ -70,10 +70,12 @@ const LoginForm = () => {
             })}              
             />         
 
-            {errors.email && <span className="error-text">{errors.email.message}</span>}
+            {errors.email && <span className="formbold-error-message">{errors.email.message}</span>}
           </div>
 
-          <div className="input-group" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <div className="input-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+
+            <div style={{ position: 'relative', width: '100%' }}>
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Contraseña"
@@ -83,24 +85,33 @@ const LoginForm = () => {
               {...register('password', { 
                 required: "La contraseña es obligatoria" })}
             />
+            </div> 
 
              {/* 4. Botón para alternar el estado */}
-            <span 
-              onClick={() => setShowPassword(!showPassword)} 
-              style={{
-                position: 'absolute',
-                right: '15px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                color: '#636e72', // Gris elegante
-                zIndex: 10 // Para asegurar que esté por encima del input
-              }}
-            >
+                <span 
+                  onClick={() => setShowPassword(!showPassword)} 
+                  style={{
+                    paddingTop: "12px",
+                    position: 'absolute',
+                    right: '15px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    color: '#636e72', // Gris elegante
+                    zIndex: 10 // Para asegurar que esté por encima del input
+                  }}
+                >
+            
+              <span 
+                className="formbold-password-icon" 
+                onClick={() => setShowPassword(!showPassword)}
+              >
               {showPassword ? <FaEyeSlash /> : <FaEye />}     
             </span>
-            {errors.password && <span className="error-text">{errors.password.message}</span>}
+            </span>   
+            {errors.password && <span className="formbold-error-message">{errors.password.message}</span>}
           </div>
+             
 
           <button 
             type="submit" 

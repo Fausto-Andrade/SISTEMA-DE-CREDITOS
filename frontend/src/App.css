@@ -49,7 +49,7 @@ html, body #root {
   background-color: #e1e1e6;
 }
 
-/* Contenedor de inputs con icono */
+/* Contenedor de inputs con icono */ 
 .input-group {
   position: relative;
   margin-bottom: 20px; /* Espacio entre campos */
@@ -361,6 +361,137 @@ body {
 }
 
 /* ******************* Fin FormContac ****************************** */
+
+/* ******************* inicio FormListaClientes ****************************** */
+.table-container {
+  padding: 40px;
+  background-color: #f9fafb;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+}
+
+.table-header {
+  margin-bottom: 25px;
+}
+
+.table-header h2 {
+  color: #07074d;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.table-header p {
+  color: #536387;
+  font-size: 16px;
+}
+
+.table-wrapper {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  overflow: hidden; /* Para que los bordes redondeados funcionen */
+}
+
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.styled-table th {
+  background-color: #6a64f1;
+  color: white;
+  padding: 15px 20px;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.styled-table td {
+  padding: 15px 20px;
+  border-bottom: 1px solid #f1f1f4;
+  color: #536387;
+  font-size: 14px;
+}
+
+.styled-table tr:hover {
+  background-color: #f8f9ff;
+}
+
+.btn-edit {
+  background-color: #e0e7ff;
+  color: #6a64f1;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-edit:hover {
+  background-color: #6a64f1;
+  color: white;
+}
+
+/* ******************* fin FormListaClientes ****************************** */
+/* ******************* btn crear cliente ****************************** */
+/* Contenedor flexible para alinear título a la izquierda y botón a la derecha */
+.table-header-section {
+  display: flex;
+  justify-content: end;          /* Empuja el botón al extremo derecho */
+  align-items: center;           /* Centra verticalmente el botón con el título */
+  margin-bottom: 30px;           /* Espacio con la tabla */
+  width: 100%;                   /* Asegura que ocupe todo el ancho */
+}
+
+.btn-add-client {
+  background-color: #6a64f1;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  /* transition: background 0.3s ease; */
+}
+
+.btn-add-client:hover {
+  background-color: #534bd1;
+}
+
+.btn-add-client:active {
+  transform: translateY(0);
+}
+
+.btn-list-creditos {
+  background-color: #6a64f1;
+  color: white;
+  border: none;
+  margin-left: 20px;  
+}
+
+.btn-list-creditos:hover {
+  background-color: #534bd1;
+}
+
+
+/* ******************* fin btn crear cliente ****************************** */
+/* ******************* Color mensaje de error e icono del  ojo ****************************** */
+
+.formbold-error-message {
+  color: #6a64f1; /* Color morado */
+  font-size: 14px;
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+.formbold-password-icon {
+  color: #6a64f1; /* Color morado para el icono */
+  cursor: pointer;
+}
+/* ******************* Color mensaje de error e icono del  ojo ****************************** */
 
 
 /* Ajustes para pantallas pequeñas (móviles) */
