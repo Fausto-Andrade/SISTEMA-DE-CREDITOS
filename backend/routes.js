@@ -26,7 +26,6 @@ router.post('/login', async (req, res) => {
 });
 
 // --- REGISTER ---
-
 router.post('/register', async (req, res) => {
   const { username, email, password, role } = req.body;
   try {
@@ -39,40 +38,81 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// --- RUTAS DE COBRO ---
+router.post('/rutas', verificarToken, async (req, res) => {
+  const { fecha, id_user, nombre_ruta } = req.body;
+  
+  try {
+    const query = `
+      INSERT INTO rutas (fecha, id_user, nombre_ruta) 
+      VALUES ($1, $2, $3) 
+      RETURNING *`;
+      
+    const result = await pool.query(query, [fecha, id_user, nombre_ruta]);
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error("Error al insertar en tabla 'rutas':", err.message);
+    res.status(500).json({ error: "Error interno en el servidor" });
+  }
+});
+
 // --- CLIENTES ---
 router.get('/clientes', verificarToken, async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM clientes ORDER BY id ASC');
+    const query = `
+      SELECT c.*, u.username as nombre_cobrador 
+      FROM clientes c
+      LEFT JOIN users u ON c.id_cobrador = u.id
+      ORDER BY c.id_cedula ASC`;
+    
+    const result = await pool.query(query);
     res.status(200).json(result.rows);
   } catch (err) {
+    console.error("Error al obtener clientes:", err);
     res.status(500).json({ message: "Error al obtener clientes" });
   }
 });
 
 router.post('/clientes', verificarToken, async (req, res) => {
-  const { name, apellido, correo, celular, direccion, genero, ciudad } = req.body;
+  // Asegúrate de que estos nombres coincidan EXACTAMENTE con lo que envías desde React
+  const { id_cedula, name, apellido, celular, direccion, barrio_cliente, pais, departamento_cliente, ciudad, barrio_cobro, direccion_cobro, empresa, cargo, direccion_empresa,ciudad_empresa, telefono_empresa, nombre_fiador, celular_fiador, ciudad_fiador, direccion_fiador, barrio_fiador, notas, id_cobrador } = req.body;
+  
+  if (!id_cedula) return res.status(400).json({ mensaje: "La cédula es obligatoria" });
+
   try {
     const nuevoCliente = await pool.query(
-      `INSERT INTO clientes (name, apellido, correo, celular, direccion, genero, ciudad) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [name, apellido, correo, celular, direccion, genero, ciudad]
+      `INSERT INTO clientes (id_cedula, name, apellido, celular, direccion, barrio_cliente, pais, departamento_cliente, ciudad, barrio_cobro, direccion_cobro, empresa, cargo, direccion_empresa,ciudad_empresa, telefono_empresa, nombre_fiador, celular_fiador, ciudad_fiador, direccion_fiador, barrio_fiador, notas, id_cobrador) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23) RETURNING *`,
+      [id_cedula, name, apellido, celular, direccion, barrio_cliente, pais, departamento_cliente, ciudad, barrio_cobro, direccion_cobro, empresa, cargo, direccion_empresa,ciudad_empresa, telefono_empresa, nombre_fiador, celular_fiador, ciudad_fiador, direccion_fiador, barrio_fiador, notas, id_cobrador]
     );
     res.status(201).json({ mensaje: "Cliente registrado con éxito", cliente: nuevoCliente.rows[0] });
   } catch (error) {
-    res.status(500).json({ mensaje: "Error al guardar cliente" });
+    console.error("Error DB:", error.message);
+    res.status(500).json({ mensaje: "Error al guardar cliente: " + error.message });
   }
 });
 
 // --- CREAR CREDITOS ---
-
 router.post('/creditos', verificarToken, async (req, res) => {
-  const { cliente_id, monto, cuotas, interes, fecha_inicio, total_pagar } = req.body;
+  const { 
+    cliente_id, monto, cuotas, interes, fecha_inicio, total_pagar, tipo_interes, frecuencia_cuotas, cobrador_asignado 
+  } = req.body;
+  
   const usuario_id = req.user.id; 
+
   try {
     const query = `
-      INSERT INTO creditos (cliente_id, numero_credito_cliente, monto, cuotas, interes, fecha_inicio, total_pagar, usuario_id) 
-      VALUES ($1, nextval('creditos_id_seq'), $2, $3, $4, $5, $6, $7) RETURNING *`;
-    const values = [cliente_id, monto, cuotas, interes, fecha_inicio, total_pagar, usuario_id];
+      INSERT INTO creditos (
+        cliente_id, monto, cuotas, interes, fecha_inicio, total_pagar, 
+        usuario_id, tipo_interes, frecuencia_cuotas, cobrador_asignado
+      ) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`;
+      
+    const values = [
+      cliente_id, monto, cuotas, interes, fecha_inicio, 
+      total_pagar, usuario_id, tipo_interes, frecuencia_cuotas, cobrador_asignado
+    ];
+
     const newCredito = await pool.query(query, values);
     res.status(201).json(newCredito.rows[0]);
   } catch (err) {
@@ -88,13 +128,14 @@ router.get('/creditos/detalle/:id', verificarToken, async (req, res) => {
     const query = `
       SELECT c.*, (cl.name || ' ' || cl.apellido) as nombre_cliente
       FROM creditos c
-      JOIN clientes cl ON c.cliente_id = cl.id
-      WHERE c.id = $1`;
+      JOIN clientes cl ON c.cliente_id = cl.id_cedula -- Correcto
+      WHERE c.id = $1`; // Asegúrate que 'id' en la tabla creditos sea SERIAL
     const result = await pool.query(query, [id]);
+    
     if (result.rows.length === 0) return res.status(404).json({ message: "Crédito no encontrado" });
     res.json(result.rows[0]);
   } catch (err) {
-    console.error(err.message);
+    console.error("Error en detalle:", err.message);
     res.status(500).json({ error: "Error al obtener detalle" });
   }
 });
@@ -105,7 +146,7 @@ router.get('/creditos/cobrador', verificarToken, async (req, res) => {
     const query = `
       SELECT c.*, cl.name AS cliente_nombre, cl.apellido AS cliente_apellido
       FROM creditos c
-      JOIN clientes cl ON c.cliente_id = cl.id
+      JOIN clientes cl ON c.cliente_id = cl.id_cedula
       WHERE c.usuario_id = $1
       ORDER BY c.id DESC`;
     const result = await pool.query(query, [cobradorId]);
@@ -190,6 +231,105 @@ router.post('/abonos/mora', verificarToken, async (req, res) => {
   }
 });
 
+// --- CREAR NUEVO CRÉDITO ---
+router.post('/creditos', verificarToken, async (req, res) => {
+  const { 
+    cliente_id, monto, cuotas, interes, fecha_inicio, 
+    total_pagar, tipo_interes, frecuencia_cuotas, cobrador_asignado 
+  } = req.body;
+  
+  // El id del usuario que crea el registro viene del token
+  const usuario_id = req.user.id; 
+
+  try {
+    const query = `
+      INSERT INTO creditos (
+        cliente_id, monto, cuotas, interes, fecha_inicio, 
+        total_pagar, usuario_id, tipo_interes, frecuencia_cuotas, cobrador_asignado, estado
+      ) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'Por Pagar') 
+      RETURNING *`;
+      
+    const values = [
+      cliente_id, monto, cuotas, interes, fecha_inicio, 
+      total_pagar, usuario_id, tipo_interes, frecuencia_cuotas, cobrador_asignado
+    ];
+
+    const newCredito = await pool.query(query, values);
+    res.status(201).json(newCredito.rows[0]);
+    
+  } catch (err) {
+    console.error("Error al insertar crédito:", err.message);
+    res.status(500).json({ error: "Error interno en el servidor" });
+  }
+});
+
+
+// VALIDAR SI EL CLIENTE YA TIENE CREDITOS ACTIVOS
+router.get('/creditos/verificar-pendiente/:clienteId', verificarToken, async (req, res) => {
+  const { clienteId } = req.params;
+  try {
+    const query = `
+      SELECT COUNT(*) 
+      FROM creditos 
+      WHERE cliente_id = $1 AND (estado = 'Por Pagar' OR estado = 'Activo')`;
+    
+    const result = await pool.query(query, [clienteId]);
+    const tienePendiente = parseInt(result.rows[0].count) > 0;
+    
+    res.json({ tienePendiente, cantidad: result.rows[0].count });
+  } catch (err) {
+    res.status(500).json({ error: "Error al verificar créditos pendientes" });
+  }
+});
+
+// OBTENER DETALLE DE UN CLIENTE (DATOS + COBRADOR) Y SUS CRÉDITOS
+router.get('/clientes/detalle/:cedula', verificarToken, async (req, res) => {
+  const { cedula } = req.params;
+
+  try {
+    // 1. Obtener datos básicos del cliente con el nombre del cobrador dinámico
+    // Realizamos un LEFT JOIN con la tabla usuarios para traer el nombre real
+    const clienteRes = await pool.query(
+      `SELECT 
+        c.*, 
+        u.username AS nombre_cobrador 
+       FROM clientes c
+       LEFT JOIN users u ON c.id_cobrador = u.id
+       WHERE c.id_cedula = $1`, 
+      [cedula]
+    );
+    
+    // Verificamos si el cliente existe
+    if (clienteRes.rows.length === 0) {
+      return res.status(404).json({ mensaje: "Cliente no encontrado" });
+    }
+
+    // 2. Obtener todos los créditos asociados a esa cédula
+    // Ordenamos por fecha de inicio para que el más reciente aparezca primero
+    const creditosRes = await pool.query(
+      `SELECT * FROM creditos 
+       WHERE cliente_id = $1 
+       ORDER BY fecha_inicio DESC`, 
+      [cedula]
+    );
+
+    // Respondemos con ambos objetos consolidados
+    res.json({
+      cliente: clienteRes.rows[0],
+      creditos: creditosRes.rows
+    });
+
+  } catch (error) {
+    // Log para depuración en consola del servidor
+    console.error("Error al obtener detalle del cliente:", error.message);
+    res.status(500).json({ 
+      mensaje: "Error interno del servidor al obtener el detalle",
+      error: error.message 
+    });
+  }
+});
+
 // --- OBTENER TODOS LOS USUARIOS (Para el AdminDashboard) ---
 router.get('/usuarios-registrados', verificarToken, async (req, res) => {
   try {
@@ -225,4 +365,36 @@ router.delete('/usuarios/:id', verificarToken, async (req, res) => {
   }
 });
 
+// --- OBTENER TODAS LAS RUTAS ---
+router.get('/rutas', verificarToken, async (req, res) => {
+  try {
+    const query = `
+      SELECT r.*, u.username as cobrador_nombre 
+      FROM rutas r
+      JOIN users u ON r.id_user = u.id
+      ORDER BY r.fecha DESC`;
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error al obtener rutas:", err.message);
+    res.status(500).json({ error: "Error al cargar las rutas" });
+  }
+});
+
+// --- ELIMINAR UNA RUTA POR ID ---
+router.delete('/rutas/:id', verificarToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const query = 'DELETE FROM rutas WHERE id_ruta = $1';
+    const result = await pool.query(query, [id]);
+    
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Ruta no encontrada" });
+    }
+    res.json({ message: "Ruta eliminada correctamente" });
+  } catch (err) {
+    console.error("Error al eliminar ruta:", err.message);
+    res.status(500).json({ error: "Error interno al eliminar la ruta" });
+  }
+});
 module.exports = router;

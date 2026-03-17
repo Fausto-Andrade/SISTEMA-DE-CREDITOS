@@ -1,249 +1,154 @@
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import api from "../api/auth"; // 1. Importamos la API
-import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../api/auth";
+import Swal from 'sweetalert2';
+import '../App.css';
 
 const FormContac = () => {
-  const [serverMessage, setServerMessage] = useState(""); // Para mostrar errores del servidor
+  const [nombreUsuario, setNombreUsuario] = useState("");
+  const navigate = useNavigate();
+  const { register, handleSubmit, reset, watch, formState: { errors, isValid } } = useForm({ mode: "all" });
 
-  const { register, handleSubmit, reset, formState: { errors, isValid } } = useForm({
-    mode: "onBlur" // Esto hace que valide al perder el foco
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) setNombreUsuario(JSON.parse(userData).nombre || "Cobrador");
+  }, []);
+
+  // Función reutilizable para validar solo letras
+  const soloLetrasProps = (name) => ({
+    ...register(name, { pattern: { value: /^[a-zA-ZÀ-ÿ\s]+$/, message: "Solo letras" } }),
+    onKeyDown: (e) => {
+      if (!/^[a-zA-ZÀ-ÿ\s]$/.test(e.key) && !['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'].includes(e.key)) {
+        e.preventDefault();
+      }
+    }
   });
 
-  // 2. Función de envío actualizada
   const onSubmit = async (data) => {
-    try {
-      setServerMessage("Guardando...");
-      
-      // Mapeamos los datos del formulario a los nombres de la tabla PostgreSQL
-      const dataToPost = {
-        name: data.nombre, // Cambiamos 'nombre' por 'name' como pide la tabla
-        apellido: data.apellido,
-        correo: data.email, // Cambiamos 'email' por 'correo'
-        celular: data.celular,
-        direccion: data.direccion,
-        genero: data.genero === "m" ? "Masculino" : data.genero === "f" ? "Femenino" : "Otro",
-        ciudad: data.ciudad
-      };
+  try {
+    const userLogged = JSON.parse(localStorage.getItem('user'));
+    
+    // Crea el objeto exacto que el servidor espera
+    const clienteData = {
+      id_cedula: data.cedula,
+      name: data.nombre,
+      apellido: data.apellido,
+      celular: data.celular,
+      direccion: data.direccion,
+      barrio_cliente: data.barrio_cliente,
+      pais: data.pais,
+      departamento_cliente: data.departamento_cliente,
+      ciudad: data.ciudad,
+      barrio_cobro: data.barrio_cobro,
+      direccion_cobro: data.direccion_cobro,
+      empresa: data.empresa,
+      cargo: data.cargo,
+      direccion_empresa: data.direccion_empresa,
+      ciudad_empresa: data.ciudad_empresa,
+      telefono_empresa: data.telefono_empresa,
+      nombre_fiador: data.nombre_fiador,
+      celular_fiador: data.celular_fiador,
+      ciudad_fiador: data.ciudad_fiador,
+      direccion_fiador: data.direccion_fiador,
+      barrio_fiador: data.barrio_fiador,
+      notas: data.notas,
+      id_cobrador: userLogged?.id
+    };
 
-      const response = await api.post('/clientes', dataToPost);
+    await api.post('/clientes', clienteData);
+    Swal.fire('¡Éxito!', 'Cliente registrado.', 'success').then(() => {
+      reset();
+      navigate('/clientes');
+    });
+  } catch (error) {
+    console.error("Error detallado:", error.response?.data);
+    Swal.fire('Error', 'No se pudo registrar. Verifica los campos.', 'error');
+  }
+};
 
-      if (response.status === 201) {
-        alert("Cliente registrado exitosamente en la base de datos");
-        reset(); // Limpia el formulario
-        setServerMessage("");
-      }
-    } catch (error) {
-      console.error("Error al registrar:", error);
-      const msg = error.response?.data?.mensaje || "Error al conectar con el servidor";
-      setServerMessage(msg);
-    }
-  };
+  const isFormReady = isValid && watch("terminos");
 
   return (
-    <div>
-      <div className="formbold-main-wrapper">
-        <div className="formbold-form-wrapper">
-          <img src="./img-reg.jpg" alt="Registro" />
+    <div className="formbold-main-wrapper">
+      <div className="formbold-form-wrapper">
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="formbold-form-title">
+            <h2 style={{ color: '#6A64F1' }}>Registrar Cliente</h2>
+            <p>Creado por: <strong style={{ color: '#6A64F1' }}>{nombreUsuario}</strong></p>
+          </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
-            <div className="formbold-form-title">
-              <h2>Registrar Cliente</h2>
-              <p>Debe registrar al usuario para habilitar el crédito.</p>
-              {serverMessage && <p style={{ color: 'red', fontWeight: 'bold' }}>{serverMessage}</p>}
-            </div>
-
-            {/* NOMBRES Y APELLIDOS */}
+          <legend style={{ color: '#6A64F1', fontWeight: 'bold' }}>Información Personal</legend>
             <div className="formbold-input-flex">
-                <div>
-                    <label className="formbold-form-label">Nombres</label>
-                    <input
-                        className="formbold-form-input"
-                        type="text"
-                        placeholder="Ingrese el nombre"
-                        autoFocus
-                        autoComplete="off"
-                        {...register('nombre', {
-                        required: "El nombre es obligatorio",
-                        minLength: { value: 3, message: "Mínimo 3 caracteres" },
-                        pattern: {
-                        value: /^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]+$/,
-                        message: "No se permiten números ni caracteres especiales"
-                        }
-                        })}
-                        onKeyDown={(e) => {
-                            if (/[0-9]/.test(e.key)) {
-                            e.preventDefault();
-                            }
-                        }}
-                    />
-                    {errors.nombre && <p className="error-msg">{errors.nombre.message}</p>}
-                </div>
-
-                <div>
-                <label className="formbold-form-label">Apellidos</label>
-                <input
-                    type="text"
-                    placeholder="Ingrese el apellido"
-                    className="formbold-form-input"
-                    autoComplete="off"
-                    {...register('apellido', {
-                    required: "El apellido es obligatorio",
-                    minLength: { value: 2, message: "Mínimo 2 caracteres" },
-                    pattern: {
-                        value: /^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]+$/,
-                        message: "No se permiten números ni caracteres especiales"
-                        }
-                    })}
-                        onKeyDown={(e) => {
-                            if (/[0-9]/.test(e.key)) {
-                            e.preventDefault();
-                            }
-                        }}
-                />
-                {errors.apellido && <p className="error-msg">{errors.apellido.message}</p>}
-                </div>
+              <input type="number" {...register('cedula', { required: true })} placeholder="Cédula" className="formbold-form-input" />
+              <input {...soloLetrasProps('nombre')} placeholder="Nombre" className="formbold-form-input" />
             </div>
-
-            {/* EMAIL Y CELULAR */}
             <div className="formbold-input-flex">
-                <div>
-                <label className="formbold-form-label">Correo Electrónico</label>
-                <input
-                    type="email"
-                    placeholder="ejemplo@correo.com"
-                    className="formbold-form-input"
-                    autoComplete="off"
-                    {...register('email', {
-                    required: "El correo es obligatorio",                    
-                    pattern: {
-                        value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                        message: "Formato de correo inválido"
-                    }
-                    })}
-                />
-                
-                {errors.email && <p className="error-msg">{errors.email.message}</p>}
-                
-                </div>
-
-                <div>
-                <label className="formbold-form-label">Número Celular</label>
-                    <input
-                        type="text"
-                        placeholder="Ej: 3001234567"
-                        className="formbold-form-input"
-                        autoComplete="off"
-                        {...register('celular', {
-                            required: "El celular es obligatorio",
-                            minLength: { value: 9, message: "Número demasiado corto" },                
-                            maxLength: { value: 10, message: "Máximo 10 números" }                
-                        })}
-                        onKeyDown={(e) => {
-                            const teclasPermitidas = ['Backspace', 'Tab', 'Enter', 'Escape', 'ArrowLeft', 'ArrowRight'];
-                            if (!/[0-9]/.test(e.key) && !teclasPermitidas.includes(e.key)) {
-                            e.preventDefault();
-                            }
-                        }}
-                        />
-                    {errors.celular && <p className="error-msg">{errors.celular.message}</p>}
-                </div>
+              <input {...soloLetrasProps('apellido')} placeholder="Apellido" className="formbold-form-input" />
+              <input type="number" {...register('celular', { required: true })} placeholder="Celular" className="formbold-form-input" />
             </div>
-
-            {/* DIRECCIÓN */}
-            <div className="formbold-mb-3">
-                <label className="formbold-form-label">Dirección</label>
-                <input
-                type="text"
-                placeholder="Ingrese la dirección"
-                className="formbold-form-input"
-                autoComplete="off"
-                {...register('direccion', {
-                    required: "La dirección es obligatoria",
-                    minLength: { value: 9, message: "Mínimo 9 caracteres" },
-                })}
-                />
-                {errors.direccion && <p className="error-msg">{errors.direccion.message}</p>}
-            </div>
-
-            {/* GENERO Y CIUDAD */}
             <div className="formbold-input-flex">
-                <div>
-                <label className="formbold-form-label">Género</label>
-                <select 
-                    className="formbold-form-input"
-                    autoComplete="off"
-                    {...register('genero', { required: "Seleccione un género" })}
-                >
-                    <option value="">Seleccione...</option>
-                    <option value="m">Masculino</option>
-                    <option value="f">Femenino</option>
-                    <option value="o">Otro</option>
-                </select>
-                {errors.genero && <p className="error-msg">{errors.genero.message}</p>}
-                </div>
-
-                <div>
-                <label className="formbold-form-label">Ciudad</label>
-                <input
-                    type="text"
-                    placeholder="Ingrese la ciudad"
-                    className="formbold-form-input"
-                    autoComplete="off"
-                    {...register('ciudad', {
-                    required: "La ciudad es obligatoria",
-                    pattern: {
-                        // Esta expresión regular permite letras (incluyendo ñ y tildes) y espacios
-                        value: /^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]+$/,
-                        message: "No se permiten números ni caracteres especiales"
-                        },
-                    minLength: { value: 4, message: "Mínimo 4 caracteres" },
-                    })}
-                        // Bloqueo físico de números al teclear
-                        onKeyDown={(e) => {
-                            if (/[0-9]/.test(e.key)) {
-                            e.preventDefault();
-                            }
-                        }}
-                />
-                {errors.ciudad && <p className="error-msg">{errors.ciudad.message}</p>}
-                </div>
+              <input {...register('direccion')} placeholder="Dirección Residencia" className="formbold-form-input" />
+              <input {...register('barrio_cobro')} placeholder="Barrio Cliente" className="formbold-form-input" />
             </div>
 
-            {/* CHECKBOX TÉRMINOS */}
-            <div className="formbold-checkbox-wrapper">
-                <label className="formbold-checkbox-label">
-                    <div className="formbold-relative">
-                        <input
-                            type="checkbox"
-                            className="formbold-input-checkbox"
-                            {...register('terminos', {
-                                required: "Debe aceptar los términos para continuar"
-                            })}
-                        />                                         
-                        {/* Aquí va tu SVG de la flechita */}
-                        <div className="formbold-checkbox-inner"></div>                        
-                            
-                    </div>
-                        <span className="formbold-checkbox-text">
-                        Acepto los términos <a href="#"> condiciones y políticas definidos.</a>
-                        </span>
-                </label>
-                    </div>
-                    {errors.terminos && <p className="error-msg">{errors.terminos.message}</p>}                   
 
-                <button 
-                    type="submit" 
-                    className="formbold-btn" 
-                    disabled={!isValid} // <--- Se deshabilita si el formulario no es válido
-                    style={{
-                    opacity: isValid ? 1 : 0.6, // Efecto visual de deshabilitado
-                    cursor: isValid ? 'pointer' : 'not-allowed'
-                    }}
-                >
-                    Registrarse
-                </button>
-            </form>
-        </div>
+
+            <legend style={{ color: '#6A64F1', fontWeight: 'bold' }}>Información de Cobro</legend>            
+            <div className="formbold-input-flex">
+              <input {...soloLetrasProps('pais')} placeholder="País" className="formbold-form-input" />
+              <input {...soloLetrasProps('departamento_cliente')} placeholder="Departamento" className="formbold-form-input" />
+            </div>
+            <div className="formbold-input-flex">
+              <input {...soloLetrasProps('ciudad')} placeholder="Ciudad" className="formbold-form-input" />
+              <input {...register('barrio_cobro')} placeholder="Barrio Cobro" className="formbold-form-input" />
+              
+            </div>
+            <div className="formbold-input-flex">
+              <input {...register('direccion_cobro')} placeholder="Dirección Cobro" className="formbold-form-input" />
+            </div>
+
+
+          
+
+          <legend style={{ color: '#6A64F1', fontWeight: 'bold' }}>Datos Laborales</legend>
+            <div className="formbold-input-flex">
+              <input {...register('empresa')} placeholder="Empresa" className="formbold-form-input" />
+              <input {...register('cargo')} placeholder="Cargo" className="formbold-form-input" />
+            </div>
+            <div className="formbold-input-flex">
+            <input {...register('direccion_empresa')} placeholder="Dirección Empresa" className="formbold-form-input" />
+            </div>
+            <div className="formbold-input-flex">
+              <input {...soloLetrasProps('ciudad_empresa')} placeholder="Ciudad Empresa" className="formbold-form-input" />
+              <input type="number" {...register('telefono_empresa')} placeholder="Teléfono Empresa" className="formbold-form-input" />
+            </div>
+          
+
+          <legend style={{ color: '#6A64F1', fontWeight: 'bold' }}>Datos del Fiador</legend>
+            <div className="formbold-input-flex">
+              <input {...soloLetrasProps('nombre_fiador')} placeholder="Nombre Fiador" className="formbold-form-input"/>
+            </div>
+            <div className="formbold-input-flex">
+              <input type="number" {...register('celular_fiador')} placeholder="Celular Fiador" className="formbold-form-input" />
+              <input {...soloLetrasProps('ciudad_fiador')} placeholder="Ciudad Fiador" className="formbold-form-input" />
+            </div>
+            <div className="formbold-input-flex">
+              <input {...register('direccion_fiador')} placeholder="Dirección Fiador" className="formbold-form-input" />
+              <input {...soloLetrasProps('barrio_fiador')} placeholder="Barrio Fiador" className="formbold-form-input" />
+            </div>
+
+          <textarea {...register('notas')} placeholder="Notas adicionales" className="formbold-form-input"></textarea>
+
+          <label style={{ color: '#6A64F1', fontWeight: 'bold' }}>
+            <input type="checkbox" {...register('terminos', { required: true })} /> Acepto términos
+          </label>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '15px' }}>
+            <button type="submit" className="formbold-btn" disabled={!isFormReady} style={{ backgroundColor: isFormReady ? '#6A64F1' : '#ccc' }}>Registrar</button>
+            <button type="button" onClick={() => navigate('/clientes')} className="formbold-btn" style={{ backgroundColor: '#6a64f1' }}>Volver</button>
+          </div>
+        </form>
       </div>
     </div>
   );

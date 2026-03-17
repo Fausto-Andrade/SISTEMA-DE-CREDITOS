@@ -3,6 +3,10 @@
 // jwt será el objeto con los métodos como sign() y verify().
 
 const jwt = require('jsonwebtoken');
+  if (!process.env.JWT_SECRET) {
+    console.error("CRITICAL ERROR: JWT_SECRET is not defined in .env file");
+    process.exit(1); // Detiene el servidor si no hay clave secreta
+  }
 
 // Se define una función middleware para Express, recibe:
 // req → request (petición), res → response (respuesta), next → función que pasa al siguiente middleware

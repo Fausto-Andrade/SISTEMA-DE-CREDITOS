@@ -8,6 +8,7 @@ import FormCrearRuta from './pages/FormCrearRuta';
 import FormListaCliente from './pages/FormListaClientes';
 import FormListadoCreditos from './pages/FormListadoCreditos';
 import FormAbonosCliente from './pages/FormAbonosCliente';
+import DetalleCliente from './pages/DetalleCliente';
 
 // 🛡️ Componente para proteger rutas según el ROL
 const ProtectedRoute = ({ children, allowedRole }) => {
@@ -55,7 +56,7 @@ function App() {
           } 
         />
 
-        <Route path="/creditos" element={<ProtectedRoute allowedRole="user">
+        <Route path="/crear-credito" element={<ProtectedRoute allowedRole="user">
           <FormCredito />
             </ProtectedRoute>
           } 
@@ -80,6 +81,14 @@ function App() {
                 </ProtectedRoute>
           } />
 
+        {/* <Route path="/creditos/nuevo" element={<ProtectedRoute allowedRole="user">
+             <FormCredito />
+                </ProtectedRoute>
+          } /> */}
+
+          <Route path="/creditos/nuevo" element={<FormCredito />} />
+
+          <Route path="/cliente/detalle/:cedula" element={<DetalleCliente />} />
 
       </Routes>
     </Router>

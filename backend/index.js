@@ -1,7 +1,9 @@
+require('dotenv').config();
 // 1. PRIMERO: Los requires (las importaciones)
 const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes');
+const { SiDotenv } = require('react-icons/si');
 
 // 2. SEGUNDO: La inicialización
 const app = express();

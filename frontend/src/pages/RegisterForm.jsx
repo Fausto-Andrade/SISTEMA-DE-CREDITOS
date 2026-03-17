@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { useNavigate } from 'react-router-dom';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import Swal from 'sweetalert2';
 import api from '../api/auth';
 
 const RegisterForm = () => {
@@ -41,6 +42,16 @@ const RegisterForm = () => {
       const user = response.data;
       console.log("Respuesta:", user);
 
+      // 🔥 Alerta de éxito con SweetAlert2
+            Swal.fire({
+              title: '¡Bienvenido!',
+              text: `Hola ${user.username}, iniciando sesión...`,
+              icon: 'success',
+              timer: 1500,
+              showConfirmButton: false,
+              timerProgressBar: true,
+            }).then(() => {
+
       // Importante: Verifica que tu backend devuelva 'rol'
       if (user.role === 'admin') {
         alert("Bienvenido, Administrador");
@@ -49,10 +60,20 @@ const RegisterForm = () => {
         alert("Registro exitoso");
         navigate('/home');
       }
+      });
 
     } catch (error) {
       console.error("Error en el registro", error);
       setErrorServer(error.response?.data?.message || 'Error al conectar con el servidor');
+
+      // ❌ Alerta de error con SweetAlert2
+            Swal.fire({
+              title: 'Error de acceso',
+              text: errorMessage,
+              icon: 'error',
+              confirmButtonText: 'Reintentar',
+              confirmButtonColor: '#6A64F1'
+            });
     }
   };
 

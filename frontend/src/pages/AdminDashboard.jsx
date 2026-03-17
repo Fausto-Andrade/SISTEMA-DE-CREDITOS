@@ -7,21 +7,27 @@ import '../App.css';
 
 const AdminDashboard = () => {
   const [usuarios, setUsuarios] = useState([]);
+  const [rutas, setRutas] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const obtenerUsuarios = async () => {
+    const cargarDatos = async () => {
       try {
-        const response = await api.get('/usuarios-registrados');
-        setUsuarios(response.data);
+        setLoading(true);
+        const [resUsuarios, resRutas] = await Promise.all([
+          api.get('/usuarios-registrados'),
+          api.get('/rutas')
+        ]);
+        setUsuarios(resUsuarios.data);
+        setRutas(resRutas.data);
       } catch (error) {
-        console.error("Error al cargar usuarios:", error);
+        console.error("Error al cargar datos:", error);
       } finally {
         setLoading(false);
       }
     };
-    obtenerUsuarios();
+    cargarDatos();
   }, []);
 
   const eliminarUsuario = async (id, username) => {
@@ -31,21 +37,39 @@ const AdminDashboard = () => {
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#e74c3c',
-      cancelButtonColor: '#bdc3c7',
       confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
           await api.delete(`/usuarios/${id}`);
-          // Actualizamos la lista local filtrando el usuario borrado
           setUsuarios(usuarios.filter(user => user.id !== id));
-          Swal.fire('Eliminado', 'El cobrador ha sido removido.', 'success');
+          Swal.fire('Eliminado', 'Usuario removido con éxito.', 'success');
         } catch (error) {
-          Swal.fire('Error', error.response?.data?.mensaje || 'No se pudo eliminar', 'error');
+          Swal.fire('Error', 'No se pudo eliminar', 'error');
         }
       }
     });
+  };
+
+  const eliminarRuta = async (id, nombre) => {
+    const result = await Swal.fire({
+      title: `¿Eliminar la ruta '${nombre}'?`,
+      text: "Esta acción no se puede deshacer.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#e74c3c',
+      confirmButtonText: 'Sí, eliminar'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await api.delete(`/rutas/${id}`);
+        setRutas(rutas.filter(r => r.id_ruta !== id));
+        Swal.fire('Eliminado', 'La ruta ha sido eliminada.', 'success');
+      } catch (error) {
+        Swal.fire('Error', 'No se pudo eliminar la ruta', 'error');
+      }
+    }
   };
 
   if (loading) return <div className="loader">Cargando datos...</div>;
@@ -53,120 +77,58 @@ const AdminDashboard = () => {
   return (
     <>
       <Navbar />
-      
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: 'column',
-        alignItems: 'center', 
-        paddingTop: '100px', 
-        minHeight: '100vh',
-        backgroundColor: '#f4f7fe'
-      }}>
-
-        <div style={{ 
-          minHeight: '100vh', 
-          width: '100%',
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center',    
-          padding: '40px 0' 
-        }}>
-    
-          <div style={{ 
-            display: '-ms-flexbox',
-            justifyContent: 'center',
-            alignItems: 'center',
-            width: '90%', 
-            maxWidth: '1000px', 
-            backgroundColor: 'white', 
-            borderRadius: '12px', 
-            boxShadow: '0 8px 30px rgba(0,0,0,0.30)', 
-            padding: '25px',
-            margin: '0 auto'
-          }}>
-            
-            <header style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              marginBottom: '20px',
-              paddingBottom: '15px',
-              borderBottom: '1px solid #eee'
-            }}>
-              <h2 style={{ margin: 0, fontSize: '24px', color: '#1a1a1a' }}>Listado de Cobradores</h2>
+      <div style={{ paddingTop: '100px', backgroundColor: '#f4f7fe', minHeight: '100vh'}}>
         
-              <div style={{ textAlign: 'right' }}>
-                <button 
-                  onClick={() => navigate('/crear-ruta')}
-                  className="register-button" 
-                  style={{ 
-                    width: 'auto', 
-                    padding: '10px 25px', 
-                    color: 'white', 
-                    backgroundColor: '#633ef1',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  + Crear Ruta
-                </button>
-              </div>
-            </header>
+        {/* --- SECCIÓN USUARIOS --- */}
+        <div style={styles.container}>
+          <header style={styles.header}>
+            <h2 style={{ margin: 0 }}>Listado de Cobradores</h2>
+            <button onClick={() => navigate('/crear-ruta')} className="register-button" style={styles.btnCrear}>+ Crear Ruta</button>
+            <button onClick={() => navigate('/signup')} className="register-button" style={styles.btnCrear}>+ Crear Cobrador</button>
+          </header>    
+          
+          <table style={styles.table}>
+            <thead>
+              <tr style={styles.trHead}>
+                <th>Usuario</th><th>Email</th><th>Rol</th><th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {usuarios.map(user => (
+                <tr key={user.id} style={styles.trBody}>
+                  <td>{user.username}</td><td>{user.email}</td>
+                  <td>{user.role}</td>
+                  <td><button onClick={() => eliminarUsuario(user.id, user.username)} style={styles.btnEliminar}>Eliminar</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ 
-                width: '100%', 
-                borderCollapse: 'collapse',
-                margin: '0 auto'
-              }}>
-                <thead>
-                  <tr style={{ backgroundColor:'#633ef1', color: 'white' }}>
-                    <th style={styles.th}>ID</th>
-                    <th style={styles.th}>Usuario</th>
-                    <th style={styles.th}>Email</th>
-                    <th style={styles.th}>Rol</th>
-                    <th style={styles.th}>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {usuarios.map((user) => (
-                    <tr key={user.id} style={styles.tr}>
-                      <td style={styles.td}>{user.id}</td>
-                      <td style={{ ...styles.td, fontWeight: 'bold' }}>{user.username}</td>
-                      <td style={styles.td}>{user.email}</td>
-                      <td style={styles.td}>
-                        <span style={{
-                          ...styles.badge,
-                          backgroundColor: user.role === 'admin' ? '#f8d7da' : '#d4edda',
-                          color: user.role === 'admin' ? '#721c24' : '#155724'
-                        }}>
-                          {user.role}
-                        </span>
-                      </td>
-                      <td style={styles.td}>
-                        <button 
-                          onClick={() => eliminarUsuario(user.id, user.username)}
-                          style={{
-                            backgroundColor: '#e74c3c',
-                            color: 'white',
-                            border: 'none',
-                            padding: '6px 12px',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: 'bold'
-                          }}
-                        >
-                          Eliminar
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        {/* --- SECCIÓN RUTAS --- */}
+        <div style={{ ...styles.container, marginTop: '30px', marginTop: '10px' }}>
+          <h2 style={{ marginBottom: '20px' }}>Rutas Programadas</h2>
+          <table style={styles.table}>
+            <thead>
+              <tr style={styles.trHead}>
+                <th>Nombre Ruta</th><th>Fecha</th><th>Cobrador Asignado</th><th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rutas.map(r => (
+                <tr key={r.id_ruta} style={styles.trBody}>
+                  <td>{r.nombre_ruta}</td>
+                  <td>{new Date(r.fecha).toLocaleDateString()}</td>
+                  <td>{r.cobrador_nombre}</td>
+                  <td>
+                    <button onClick={() => eliminarRuta(r.id_ruta, r.nombre_ruta)} style={styles.btnEliminar}>
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </>
@@ -174,10 +136,13 @@ const AdminDashboard = () => {
 };
 
 const styles = {
-  th: { padding: '15px', textAlign: 'center', borderBottom: '2px solid #e3e6f0' },
-  td: { padding: '12px', textAlign: 'center', color: '#4e5154' },
-  tr: { borderBottom: '1px solid #f0f0f0' },
-  badge: { padding: '5px 12px', borderRadius: '15px', fontSize: '12px', fontWeight: 'bold' }
+  container: { width: '90%', maxWidth: '1000px', margin: '0 auto', backgroundColor: 'white', borderRadius: '12px', padding: '25px', boxShadow: '0 8px 30px rgba(0,0,0,0.1)' },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
+  table: { width: '100%', borderCollapse: 'collapse' },
+  trHead: { backgroundColor: '#633ef1', color: 'white', padding: '15px' },
+  trBody: { borderBottom: '1px solid #eee', textAlign: 'center', padding: '10px' },
+  btnCrear: { width: 'auto', padding: '10px 20px', backgroundColor: '#633ef1', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' },
+  btnEliminar: { backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', marginTop: '10px' }
 };
 
 export default AdminDashboard;
