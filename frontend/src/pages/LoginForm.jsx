@@ -19,12 +19,13 @@ const LoginForm = () => {
     formState: { errors, isValid } 
   } = useForm({ 
     mode: "onBlur",
-    defaultValues: { // Definimos valores iniciales vacíos explícitamente
+    defaultValues: {
       email: "",
       password: ""
     }
   });
 
+  // Autofocus en el email al cargar
   useEffect(() => {
     reset({}, { keepDefaultValues: false });
     setFocus("email");
@@ -35,12 +36,11 @@ const LoginForm = () => {
       const response = await api.post('/login', data);
       const { user, token } = response.data;
 
-      // 🛡️ Guardamos los datos necesarios para la sesión
+      // Persistencia de sesión
       localStorage.setItem('token', token);
       localStorage.setItem('role', user.role);
       localStorage.setItem('user', JSON.stringify(user)); 
 
-      // 🔥 Alerta de éxito con SweetAlert2
       Swal.fire({
         title: '¡Bienvenido!',
         text: `Hola ${user.username}, iniciando sesión...`,
@@ -49,7 +49,7 @@ const LoginForm = () => {
         showConfirmButton: false,
         timerProgressBar: true,
       }).then(() => {
-        // Redirección basada en el rol
+        // Redirección basada en rol
         if (user.role === 'admin') {
           navigate('/admin-dashboard');
         } else {
@@ -62,7 +62,6 @@ const LoginForm = () => {
       const errorMessage = err.response?.data?.mensaje || "Credenciales incorrectas";
       setError(errorMessage);
 
-      // ❌ Alerta de error con SweetAlert2
       Swal.fire({
         title: 'Error de acceso',
         text: errorMessage,
@@ -76,15 +75,24 @@ const LoginForm = () => {
   return (
     <div className="login-container">
       <div className="login-box">
-        <h1 className="login-title">Iniciar sesión</h1>
-        {error && <p style={{ color: 'red', textAlign: 'center', fontWeight: 'bold' }}>{error}</p>}
+        <div className="login-header">
+          <h1 className="login-title">Iniciar sesión</h1>
+          <p className="login-subtitle">Ingresa tus credenciales para continuar</p>
+        </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="login-form" autoComplete='off'>
+        {error && (
+          <div className="error-banner">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit(onSubmit)} className="login-form" autoComplete="off">
           <div className="input-group">
+            <label className="form-label">Correo Electrónico</label>
             <input
               type="email"
-              placeholder="Correo electrónico"
-              className="form-input"
+              placeholder="ejemplo@correo.com"
+              className={`form-input ${errors.email ? 'input-error' : ''}`}
               {...register('email', { 
                 required: "El correo es obligatorio",
                 pattern: {
@@ -93,31 +101,38 @@ const LoginForm = () => {
                 }
               })}
             />
-            {errors.email && <span className="formbold-error-message">{errors.email.message}</span>}
+            {errors.email && <span className="error-text">{errors.email.message}</span>}
           </div>
 
-          <div className="input-group" style={{ position: 'relative' }}>
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Contraseña"
-              className="form-input"
-              {...register('password', { required: "La contraseña es obligatoria" })}
-            />
-            <span 
-              onClick={() => setShowPassword(!showPassword)}
-              style={{
-                position: 'absolute',
-                right: '10px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                cursor: 'pointer',
-                color: '#6A64F1',
-                zIndex: 10
-              }}
-            >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
-            </span>
-            {errors.password && <span className="formbold-error-message">{errors.password.message}</span>}
+          <div className="input-group">
+            <label className="form-label">Contraseña</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                className={`form-input ${errors.password ? 'input-error' : ''}`}
+                style={{ paddingRight: '45px' }}
+                {...register('password', { required: "La contraseña es obligatoria" })}
+              />
+              <span 
+                onClick={() => setShowPassword(!showPassword)}
+                className="password-toggle-icon"
+                style={{
+                  position: 'absolute',
+                  right: '15px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  cursor: 'pointer',
+                  color: '#6A64F1',
+                  display: 'flex',
+                  alignItems: 'center',
+                  fontSize: '1.2rem'
+                }}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </span>
+            </div>
+            {errors.password && <span className="error-text">{errors.password.message}</span>}
           </div>
 
           <button 
@@ -125,13 +140,20 @@ const LoginForm = () => {
             className="login-button" 
             disabled={!isValid}
             style={{
+              width: '100%',
+              padding: '14px',
+              marginTop: '10px',
+              border: 'none',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              fontSize: '16px',
               cursor: isValid ? 'pointer' : 'not-allowed',
-              opacity: isValid ? 1 : 0.5,
-              backgroundColor: isValid ? '#6A64F1' : '#ccc',
-              transition: 'all 0.3s ease'
+              backgroundColor: isValid ? '#6A64F1' : '#a5a2f7',
+              color: 'white',
+              transition: 'background-color 0.3s ease'
             }}
           >
-            Entrar
+            Entrar al Sistema
           </button>
         </form>
       </div>

@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* Esto asegura que el fondo ocupe TODA la pantalla sin márgenes raros */
-html, body #root {
+/* --- RESET Y BASES --- */
+html, body, #root {
   margin: 0;
   padding: 0;
   height: 100%;
@@ -9,196 +9,94 @@ html, body #root {
   min-height: 100vh;
 }
 
-.login-container {
-  display: flex !important;      /* Forzamos el uso de Flexbox */
-  justify-content: center;       /* Centra horizontalmente */
-  align-items: center;           /* Centra verticalmente */
-  width: 100vw;                  /* 100% del ancho de la ventana */
-  height: 100vh;                 /* 100% de la altura de la ventana */
-  background-color: #f3f4f6;     /* Color de fondo para verificar que ocupa todo */
-  /* position: fixed;               Lo fija a la pantalla para evitar scroll innecesario */
-  min-height: 100vh;
-  top: 0;
-  left: 0;
-}
-
-.login-box {
-  background: white;
-  padding: 2.5rem;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-  width: 90%;                    /* En móviles ocupa el 90% */
-  max-width: 400px;              /* En escritorio no pasa de 400px */
-}
-
-
-/* Título principal */
-.login-title {
-  font-size: 24px;
-  font-weight: 600;
-  color: #1a1a1a;
-  margin-bottom: 24px;
-}
-
-/* Las líneas horizontales del divisor */
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background-color: #e1e1e6;
-}
-
-/* Contenedor de inputs con icono */ 
-.input-group {
-  position: relative;
-  margin-bottom: 20px; /* Espacio entre campos */
-}
-
-/* Icono dentro del input */
-.input-icon {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%); /* Centra verticalmente el icono */
-  width: 18px;
-  height: 18px;
-  opacity: 0.5; /* Hace el icono sutil */
-}
-
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px; /* Espacio uniforme entre elementos */
-  margin-top: 20px;
-}
-
-/* El input en sí */
-.form-input {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  box-sizing: border-box; /* ¡Importante! Mantiene el padding dentro del ancho */
-  transition: border-color 0.2s;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #6366f1; /* Color púrpura al hacer clic */
-  /* ring: 2px solid #e0e7ff; */
-}
-
-.form-input::placeholder {
-  color: #a0a0ab; /* Color del placeholder */
-}
-
-/* Enlace "Forgot password?" */
-.forgot-password-link {
-  display: block;
-  text-align: left;
-  font-size: 14px;
-  color: #633ef1; /* Color púrpura */
-  text-decoration: none;
-  margin-bottom: 24px;
-}
-
-.forgot-password-link:hover {
-  text-decoration: underline;
-}
-
-/* Botón principal de login */
-.login-button {
-  width: 100%;
-  padding: 12px;
-  background-color: #6366f1;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.login-button:hover {
-  background-color: #4f46e5;
-}
-
-/* Texto de "Don't have an account?" */
-.signup-text {
-  margin-top: 24px;
-  font-size: 14px;
-  color: #6a6a75;
-}
-
-/* Enlace "Sign up" */
-.signup-link {
-  color: #633ef1;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.signup-link:hover {
-  text-decoration: underline;
-}
-
-/* ******************* FormContac ****************************** */
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 body {
   font-family: "Inter", sans-serif;
   background-color: #f9fafb;
 }
 
-/* 1. Aseguramos que el contenedor ocupe el 100% de la pantalla */
-.formbold-main-wrapper {
-  display: flex !important; 
-  align-items: center;      /* Centra verticalmente */
-  justify-content: center;  /* Centra horizontalmente */
-  min-height: 100vh;        /* Altura mínima de la ventana */
-  width: 100%;              /* Usar 100% en lugar de 100vw para evitar scrollbar */
-  padding: 20px;            /* Espacio para que no toque los bordes */
-  background-color: #f9fafb;
-
+/* --- ESTILOS DE LOGIN --- */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f3f4f6;
+  padding: 20px;
 }
 
-/* 2. La caja del formulario */
+.login-box {
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-title {
+  font-size: 26px;
+  color: #111827;
+  text-align: center;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.login-subtitle {
+  color: #6b7280;
+  text-align: center;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+.formbold-mb-3 {
+  margin-bottom: 10px; /* Espacio entre grupos de campos */
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 16px;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #6a64f1;
+  box-shadow: 0 0 0 3px rgba(106, 100, 241, 0.1);
+}
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+/* --- ESTILOS DE FORMULARIOS (FormContac) --- */
+.formbold-main-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  background-color: #f9fafb;
+}
+
 .formbold-form-wrapper {
-  max-width: 550px;
+  margin: 0 auto;
+  max-width: 850px;
   width: 100%;
   background: white;
   padding: 40px;
-  border-radius: 8px;
-  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.05);
-}
-
-.formbold-form-wrapper img {
-  display: block;
-  margin: 0 auto 25px;
-  max-width: 100%;
-  border-radius: 4px;
-}
-
-.formbold-form-title {
-  margin-bottom: 30px;
-}
-
-.formbold-form-title h2 {
-  font-weight: 700;
-  font-size: 28px;
-  color: #07074d;
-  margin-bottom: 10px;
-}
-
-.formbold-form-title p {
-  font-size: 16px;
-  line-height: 24px;
-  color: #536387;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
 }
 
 .formbold-input-flex {
@@ -207,8 +105,9 @@ body {
   margin-bottom: 15px;
 }
 
+.formbold-input-flex > input,
 .formbold-input-flex > div {
-  width: 50%;
+  flex: 1; /* Distribución uniforme en PC */
 }
 
 .formbold-form-input {
@@ -221,175 +120,41 @@ body {
   font-size: 16px;
   color: #536387;
   outline: none;
-  resize: none;
+  box-sizing: border-box;
 }
 
-.formbold-form-input:focus {
-  border-color: #6a64f1;
-  box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.05);
-}
-
-.formbold-form-label {
-  color: #07074d;
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 24px;
-  display: block;
-  margin-bottom: 10px;
-}
-
-.formbold-mb-3 {
-  margin-bottom: 15px;
-}
-
-/* Checkbox Styles */
-.formbold-checkbox-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+legend {
+  font-size: 18px;
   margin-top: 25px;
-  margin-bottom: 25px;
-}
-
-.formbold-checkbox-label {
-  display: flex;
-  cursor: pointer;
-  user-select: none;
-  font-size: 16px;
-  line-height: 24px;
-  color: #536387;
-}
-
-.formbold-checkbox-label a {
-  color: #6a64f1;
-  margin-left: 5px;
-}
-
-.formbold-relative {
-  position: relative;
-  margin-right: 10px;
-}
-
-.formbold-input-checkbox {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
-}
-
-.formbold-checkbox-inner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  margin-right: 10px;
-  margin-top: 2px;
-  border: 0.7px solid #dde3ec;
-  border-radius: 3px;
-  background-color: #ffffff;
-}
-
-.formbold-input-checkbox:checked ~ .formbold-checkbox-inner {
-  background-color: #6a64f1;
-  border-color: #6a64f1;
-}
-
-.formbold-input-checkbox:checked ~ .formbold-checkbox-inner .formbold-opacity-0 {
-  opacity: 1;
-}
-
-.formbold-opacity-0 {
-  opacity: 0;
-}
-
-.formbold-stroke-current {
-  stroke: #ffffff;
-}
-
-/* Button Styles */
-.formbold-btn {
+  margin-bottom: 15px;
+  border-bottom: 2px solid #f0f0f5;
   width: 100%;
-  font-size: 16px;
-  border-radius: 5px;
-  padding: 14px 25px;
-  border: none;
-  font-weight: 600;
-  background-color: #6a64f1;
-  color: white;
-  cursor: pointer;
-  transition: all 0.3s ease-in-out;
+  padding-bottom: 5px;
+  color: #6a64f1;
+  font-weight: bold;
 }
 
-.formbold-btn:hover {
-  background-color: #534bb3;
-  box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.15);
-}
-
-.error-msg {
-  color: #6a64f1; /* El morado solicitado */
-  font-size: 13px;
-  margin-top: 6px;
-  font-weight: 600;
-  /* Una pequeña animación para que aparezca suavemente */
-  animation: fadeIn 0.3s ease-in;
-}
-
-/* Estilo para el botón cuando está deshabilitado */
-.formbold-btn:disabled {
-  background-color: #bbbbbb; /* Color gris para notar que está bloqueado */
-  box-shadow: none;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@media (max-width: 580px) {
-  .formbold-main-wrapper {
-    padding: 10px;
-  }
-  .formbold-form-wrapper {
-    padding: 20px;
-  }
-}
-
-/* ******************* Fin FormContac ****************************** */
-
-/* ******************* inicio FormListaClientes ****************************** */
+/* --- ESTILOS DE TABLAS (ESCRITORIO) --- */
 .table-container {
   padding: 40px;
   background-color: #f9fafb;
   min-height: 100vh;
-  font-family: 'Inter', sans-serif;
 }
 
-.table-header {
-  margin-bottom: 25px;
-}
-
-.table-header h2 {
-  color: #07074d;
-  font-size: 28px;
-  font-weight: 700;
-}
-
-.table-header p {
-  color: #536387;
-  font-size: 16px;
+.table-header-section {
+  display: flex;
+  justify-content: end; 
+  align-items: center;
+  margin-bottom: 30px;
+  width: 100%;
+  gap: 30px;
 }
 
 .table-wrapper {
   background: white;
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-  overflow: hidden; /* Para que los bordes redondeados funcionen */
+  overflow: hidden;
 }
 
 .styled-table {
@@ -419,94 +184,129 @@ body {
   background-color: #f8f9ff;
 }
 
-.btn-edit {
-  background-color: #e0e7ff;
-  color: #6a64f1;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.btn-edit:hover {
-  background-color: #6a64f1;
-  color: white;
-}
-
-/* ******************* fin FormListaClientes ****************************** */
-/* ******************* btn crear cliente ****************************** */
-/* Contenedor flexible para alinear título a la izquierda y botón a la derecha */
-.table-header-section {
-  display: flex;
-  justify-content: end;          /* Empuja el botón al extremo derecho */
-  align-items: center;           /* Centra verticalmente el botón con el título */
-  margin-bottom: 30px;           /* Espacio con la tabla */
-  width: 100%;                   /* Asegura que ocupe todo el ancho */
-}
-
-.btn-add-client {
+/* --- BOTONES GENERALES --- */
+.btn-add-client, .btn-list-creditos, .login-button, .formbold-btn {
   background-color: #6a64f1;
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 12px 20px;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  /* transition: background 0.3s ease; */
-}
-
-.btn-add-client:hover {
-  background-color: #534bd1;
-}
-
-.btn-add-client:active {
-  transform: translateY(0);
+  transition: background 0.3s;
+  text-align: center;
 }
 
 .btn-list-creditos {
-  background-color: #6a64f1;
-  color: white;
-  border: none;
-  margin-left: 20px;  
+  margin-left: 20px;
 }
 
-.btn-list-creditos:hover {
+.btn-add-client:hover, .btn-list-creditos:hover, .login-button:hover, .formbold-btn:hover {
   background-color: #534bd1;
 }
 
-
-/* ******************* fin btn crear cliente ****************************** */
-/* ******************* Color mensaje de error e icono del  ojo ****************************** */
-
-.formbold-error-message {
-  color: #6a64f1; /* Color morado */
-  font-size: 14px;
+.error-text, .formbold-error-message {
+  color: #ef4444;
+  font-size: 12px;
   margin-top: 5px;
-  font-weight: 500;
+  display: block;
 }
 
-.formbold-password-icon {
-  color: #6a64f1; /* Color morado para el icono */
-  cursor: pointer;
-}
-/* ******************* Color mensaje de error e icono del  ojo ****************************** */
-
-
-/* Ajustes para pantallas pequeñas (móviles) */
-@media (max-width: 480px) {
-  .login-box {
-    padding: 25px; /* Reducimos el padding interno en móviles */
-    box-shadow: none; /* Opcional: quitar sombra en móvil para un look más flat */
-    border: 1px solid #e5e7eb;
-  }
+/* --- DISEÑO PARA CELULARES (Móvil < 768px) --- */
+@media (max-width: 768px) {
   
-  .login-title {
-    font-size: 1.5rem; /* Título un poco más pequeño */
+  .login-box, .formbold-form-wrapper {
+    padding: 25px;
+    box-shadow: none;
+    border: 1px solid #e1e1e6;
   }
 
-  .form-input {
-    font-size: 16px; /* Evita que iOS haga zoom automático al enfocar el input */
+  .table-container, .formbold-main-wrapper {
+    padding: 15px;
   }
+
+  .table-header-section {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch; 
+  }
+
+  /* Ajuste de formulario a 1 columna */
+  .formbold-input-flex {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .btn-list-creditos {
+    margin-left: 0;
+  }
+
+  /* Tabla Responsiva */
+  .styled-table thead {
+    display: none; 
+  }
+
+  .styled-table, .styled-table tbody, .styled-table tr, .styled-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .styled-table tr {
+    margin-bottom: 20px;
+    border: 1px solid #e1e1e6;
+    border-radius: 12px;
+    padding: 10px;
+    background: #fff;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+  }
+
+  .styled-table td {
+    text-align: right;
+    padding: 12px 15px;
+    padding-left: 50%; 
+    border-bottom: 1px solid #f1f1f4;
+    position: relative;
+    min-height: 45px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  .styled-table td:last-child {
+    border-bottom: none;
+    background: #f8f9ff;
+    border-radius: 0 0 10px 10px;
+    justify-content: center;
+    padding: 15px;
+  }
+
+  .styled-table td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 10px;
+    color: #6a64f1;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .formbold-form-input {
+    width: 100% !important;
+    box-sizing: border-box;
+    font-size: 16px !important;
+  }
+
+  .formbold-form-label {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 12px; /* Mayor espacio hacia el campo */
+}
+
+.formbold-mb-3 {
+  margin-bottom: 15px; /* Espacio entre grupos de campos */
+}
 }

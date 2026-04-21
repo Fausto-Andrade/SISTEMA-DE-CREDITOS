@@ -4,13 +4,15 @@ const api = axios.create({
   baseURL: 'http://localhost:5000/api', 
 });
 
+// Interceptor para incluir el token en cada petición automáticamente
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers['Authorization'] = `Bearer ${token}`; // O solo token, según tu middleware
+    config.headers['x-access-token'] = token; // Algunos middlewares usan este nombre
   }
   return config;
-  }, (error) => {
+}, (error) => {
   return Promise.reject(error);
 });
 

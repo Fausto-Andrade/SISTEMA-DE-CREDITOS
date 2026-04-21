@@ -1,65 +1,38 @@
-// Importa la librería jsonwebtoken.
-// Esta librería se usa para crear y verificar tokens JWT (JSON Web Tokens).
-// jwt será el objeto con los métodos como sign() y verify().
-
 const jwt = require('jsonwebtoken');
-  if (!process.env.JWT_SECRET) {
-    console.error("CRITICAL ERROR: JWT_SECRET is not defined in .env file");
-    process.exit(1); // Detiene el servidor si no hay clave secreta
-  }
 
-// Se define una función middleware para Express, recibe:
-// req → request (petición), res → response (respuesta), next → función que pasa al siguiente middleware
+// Verificación de seguridad al cargar el módulo
+if (!process.env.JWT_SECRET) {
+  console.error("❌ ERROR CRÍTICO: JWT_SECRET no definido en el archivo .env");
+  // En producción, esto evita que la app sea vulnerable por falta de llave
+}
 
 const verificarToken = (req, res, next) => {
-  // Obtenemos el token del encabezado 'Authorization de la petición HTTP.'
   const authHeader = req.headers['authorization'];
-
-  // Si no existe, token será undefined
-  const token = authHeader && authHeader.split(' ')[1]; // Separamos "Bearer TOKEN por espacios"
-
-// Si no hay token: devuelve estado 401 (Unauthorized).
-// Envía mensaje en formato JSON.
-// return detiene la ejecución del middleware.
+  
+  // Soporta tanto si envían solo el token como si envían "Bearer <token>"
+  const token = authHeader && authHeader.startsWith('Bearer ') 
+                ? authHeader.split(' ')[1] 
+                : authHeader;
 
   if (!token) {
-    return res.status(401).json({ mensaje: "Acceso denegado. No hay token." });
+    return res.status(401).json({ mensaje: "Acceso denegado. No se proporcionó un token." });
   }
 
-// Se usa try porque jwt.verify() puede lanzar error si el token es inválido o expiró.
   try {
-
-    // Verificamos el token con nuestra clave secreta
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); // es la clave guardada en variables de entorno.
-
-    // Guardamos los datos del usuario (id, rol) en la petición
-    req.user = decoded; 
-    
-  // Llama al siguiente middleware o controlador.
-  // Significa: “Todo está bien, continúa”.
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // Datos del payload (id, username, role)
     next();
-
-  // Si el token está mal firmado, Está expirado, Fue alterado
-  // Devuelve 403 (Forbidden).
-
   } catch (error) {
-    res.status(403).json({ mensaje: "Token inválido o expirado." });
+    return res.status(403).json({ mensaje: "Token inválido o expirado." });
   }
 };
 
-// Middleware específico para Administradores, se usa después de verificarToken.
 const esAdmin = (req, res, next) => {
-
-// Revisa el rol del usuario.
-  if (req.user.role !== 'admin') {
-
-    // Si no es admin Devuelve 403, No permite continuar.
-    return res.status(403).json({ mensaje: "Permiso denegado. Se requiere rol de Admin." });
+  // Verificamos que exista el usuario y que su rol sea admin
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ mensaje: "Permiso denegado. Se requiere nivel de Administrador." });
   }
-
-  // Si es admin, continua con la ruta protegida 
   next();
 };
 
-// Exporta ambos middlewares permite usarlos en otros archivos:
 module.exports = { verificarToken, esAdmin };

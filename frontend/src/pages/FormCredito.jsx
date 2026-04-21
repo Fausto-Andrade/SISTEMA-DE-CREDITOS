@@ -14,36 +14,39 @@ const FormCredito = () => {
   const [loadingCobradores, setLoadingCobradores] = useState(true);
   const [clientes, setClientes] = useState([]);
 
-  const { register, handleSubmit, watch, formState: { isValid } } = useForm({
+  const { register, handleSubmit, watch, formState: { isValid, errors } } = useForm({
     mode: "onChange",
     defaultValues: { 
       cliente_id: idDesdeUrl || "",
       tipo_interes: "fijo",
-      frecuencia_cuotas: "diario"
+      frecuencia_cuotas: "diario",
+      fecha_inicio: new Date().toISOString().split('T')[0]
     }
   });
 
-  // Solo cargamos los datos necesarios (clientes y cobradores)
   useEffect(() => {
     const cargarDatos = async () => {
       try {
         setLoadingCobradores(true);
         const [resClientes, resCobradores] = await Promise.all([
-          api.get('/clientes'),
-          api.get('/usuarios-registrados')
+          api.get('/creditos/clientes'),
+          api.get('/usuarios-cobradores')
         ]);
         
         setClientes(resClientes.data);
-        setCobradores(resCobradores.data.filter(u => u.role === 'user'));
+        setCobradores(resCobradores.data);
       } catch (err) {
         console.error("Error cargando datos:", err);
+        if (err.response?.status === 403) {
+           Swal.fire('Error', 'No tienes permiso para ver la lista de cobradores', 'error');
+        }
       } finally {
         setLoadingCobradores(false);
       }
     };
 
     cargarDatos();
-  }, []); // Ya no dependemos de nada más
+  }, []);
 
   const monto = watch("monto") || 0;
   const interes = watch("interes") || 0;
@@ -56,24 +59,36 @@ const FormCredito = () => {
         cliente_id: idDesdeUrl || data.cliente_id,
         total_pagar: totalPagar 
       };
+      
       await api.post('/creditos', dataFinal);
-      Swal.fire('¡Éxito!', 'Crédito registrado correctamente', 'success');
-      navigate('/creditos/cobrador');
+      
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Éxito!',
+        text: 'Crédito registrado correctamente',
+        confirmButtonColor: '#6A64F1'
+      });
+
+      navigate('/clientes'); 
+
     } catch (error) {
-      Swal.fire('Error', error.response?.data?.error || 'No se pudo registrar', 'error');
+      console.error("Error al guardar:", error);
+      Swal.fire('Error', error.response?.data?.error || 'No se pudo registrar el crédito', 'error');
     }
   };
+
+  const hoy = new Date().toISOString().split('T')[0];
 
   return (
     <div className="formbold-main-wrapper">
       <div className="formbold-form-wrapper">
-        <form onSubmit={handleSubmit(guardarCredito)} autoComplete="off">
+        <form onSubmit={handleSubmit(guardarCredito)} autoComplete="off">          
+          <h2 style={{ color: '#6A64F1', marginBottom: '30px' }}>Crear Crédito</h2>          
           
-          {/* SECCIÓN CLIENTE */}
           <div className="formbold-mb-3">
             <label className="formbold-form-label">Cliente</label>
             {idDesdeUrl ? (
-              <div className="formbold-form-input" style={{ backgroundColor: '#f9f9f9', border: '1px solid #ddd', color: '#555' }}>
+              <div className="formbold-form-input" style={{ backgroundColor: '#f9f9f9', border: '1px solid #ddd', color: '#555', display: 'flex', alignItems: 'center' }}>
                 <strong>
                   {clientes.find(c => String(c.id_cedula) === String(idDesdeUrl))?.name || "Cargando..."} 
                   {" "}
@@ -131,7 +146,7 @@ const FormCredito = () => {
               <label className="formbold-form-label">Interés (%)</label>
               <input 
                 type="number" 
-                step="0.1" 
+                step="any" 
                 placeholder="%"
                 {...register('interes', { required: true })} 
                 className="formbold-form-input" 
@@ -190,19 +205,29 @@ const FormCredito = () => {
             <label className="formbold-form-label">Fecha de Inicio</label>
             <input 
               type="date" 
-              {...register('fecha_inicio', { required: true })} 
+              {...register('fecha_inicio', { 
+                required: "La fecha es obligatoria",
+                validate: value => value === hoy || "Debe ser la fecha actual"
+              })} 
               className="formbold-form-input" 
+              min={hoy}
+              max={hoy}
             />
+            {errors.fecha_inicio && (
+              <span style={{ color: 'red', fontSize: '12px', marginTop: '8px', display: 'block' }}>
+                {errors.fecha_inicio.message}
+              </span>
+            )}
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px', marginTop: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px', marginTop: '30px' }}>
             <button 
               type="button" 
               onClick={() => navigate('/clientes')} 
               className="formbold-btn" 
-              style={{ backgroundColor: '#e2e8f0', color: '#475569' }}
+              style={{ backgroundColor: '#6366f1', color: '#ffffff', flex: 1 }}
             >
-              Volver
+              Cancelar
             </button>
 
             <button 
@@ -211,10 +236,11 @@ const FormCredito = () => {
               disabled={!isValid}
               style={{ 
                 backgroundColor: isValid ? '#6A64F1' : '#ccc',
-                cursor: isValid ? 'pointer' : 'not-allowed'
+                cursor: isValid ? 'pointer' : 'not-allowed',
+                flex: 1
               }}
             >
-              Confirmar Registro
+              Confirmar Crédito
             </button>
           </div>
         </form>

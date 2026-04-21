@@ -7,73 +7,69 @@ import api from '../api/auth';
 
 const RegisterForm = () => {
   const [errorServer, setErrorServer] = useState('');
-  const [ showPassword, setShowPassword] = useState(false); // Estado para alternar la visibilidad
+  const [showPassword, setShowPassword] = useState(false); 
   const navigate = useNavigate();
   
-  // Usamos solo React Hook Form para capturar los datos
   const { 
     register, 
     handleSubmit, 
     reset,
     setFocus,
-    formState: { errors, isValid} } = useForm({
-    mode: "onBlur", // Valida en tiempo real mientras escriben
+    formState: { errors, isValid } 
+  } = useForm({
+    mode: "onBlur", 
     defaultValues: {
-    username: "",
-    email: "",
-    password: "",
-    role: "user" // Valor por defecto según tu imagen
+      username: "",
+      email: "",
+      password: "",
+      role: "user" 
     }
   });
 
   useEffect(() => {
-      reset({ email: "", password: "" });
-      setFocus("email");
-    }, [reset, setFocus]);
+    // Reset corregido para limpiar campos al cargar
+    reset({ username: "", email: "", password: "", role: "user" });
+    setFocus("username");
+  }, [reset, setFocus]);
   
 
   const onSubmit = async (data) => {
     try {
       setErrorServer('');
       
-      // Enviamos 'data', que ya contiene todos los campos vinculados con register()
       const response = await api.post('/register', data);
-
       const user = response.data;
-      console.log("Respuesta:", user);
 
-      // 🔥 Alerta de éxito con SweetAlert2
-            Swal.fire({
-              title: '¡Bienvenido!',
-              text: `Hola ${user.username}, iniciando sesión...`,
-              icon: 'success',
-              timer: 1500,
-              showConfirmButton: false,
-              timerProgressBar: true,
-            }).then(() => {
-
-      // Importante: Verifica que tu backend devuelva 'rol'
-      if (user.role === 'admin') {
-        alert("Bienvenido, Administrador");
-        navigate('/admin-dashboard');
-      } else {
-        alert("Registro exitoso");
-        navigate('/home');
-      }
+      Swal.fire({
+        title: '¡Registro Exitoso!',
+        text: `Usuario ${user.username} creado correctamente.`,
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false,
+        timerProgressBar: true,
+      }).then(() => {
+        // Redirección basada en el rol del usuario creado
+        if (user.role === 'admin') {
+          navigate('/admin-dashboard');
+        } else {
+          navigate('/home');
+        }
       });
 
     } catch (error) {
       console.error("Error en el registro", error);
-      setErrorServer(error.response?.data?.message || 'Error al conectar con el servidor');
+      
+      // Capturamos el mensaje específico del backend (ej: "El usuario ya existe")
+      const errorMessage = error.response?.data?.mensaje || error.response?.data?.message || 'Error al conectar con el servidor';
+      setErrorServer(errorMessage);
 
-      // ❌ Alerta de error con SweetAlert2
-            Swal.fire({
-              title: 'Error de acceso',
-              text: errorMessage,
-              icon: 'error',
-              confirmButtonText: 'Reintentar',
-              confirmButtonColor: '#6A64F1'
-            });
+      Swal.fire({
+        title: 'No se pudo registrar',
+        text: errorMessage,
+        icon: 'error',
+        confirmButtonText: 'Reintentar',
+        confirmButtonColor: '#6A64F1'
+      });
     }
   };
 
@@ -81,7 +77,12 @@ const RegisterForm = () => {
     <div className="login-container">
       <div className="login-box">
         <h1 className="login-title">Crear una cuenta</h1>
-        {errorServer && <p style={{ color: 'red', textAlign: 'center' }}>{errorServer}</p>}
+        
+        {errorServer && (
+          <div className="error-banner" style={{ backgroundColor: '#fee2e2', color: '#b91c1c', padding: '10px', borderRadius: '5px', marginBottom: '15px', textAlign: 'center', fontSize: '14px', border: '1px solid #fecaca' }}>
+            {errorServer}
+          </div>
+        )}
         
         <form onSubmit={handleSubmit(onSubmit)} className="login-form" autoComplete="off">
           
@@ -89,7 +90,7 @@ const RegisterForm = () => {
             <input
               type="text"
               placeholder="Nombre"
-              className="form-input"
+              className={`form-input ${errors.username ? 'input-error' : ''}`}
               {...register('username', { required: "El nombre es obligatorio" })}
             />
             {errors.username && <span className="error-text">{errors.username.message}</span>}
@@ -99,7 +100,7 @@ const RegisterForm = () => {
             <input
               type="email"
               placeholder="Correo electrónico"
-              className="form-input"
+              className={`form-input ${errors.email ? 'input-error' : ''}`}
               {...register('email', { 
                 required: "El correo es obligatorio",
                 pattern: {
@@ -111,18 +112,20 @@ const RegisterForm = () => {
             {errors.email && <span className="error-text">{errors.email.message}</span>}
           </div>
 
-          {/* CONTENEDOR DE CONTRASEÑA CON OJO */}
           <div className="input-group" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <input
-              type={showPassword ? "text" : "password"} // 4. TYPE DINÁMICO
+              type={showPassword ? "text" : "password"}
               placeholder="Contraseña"
               autoComplete="new-password"
-              className="form-input"
+              className={`form-input ${errors.password ? 'input-error' : ''}`}
               style={{ width: '100%', paddingRight: '40px' }}
-              {...register('password', { required: "La contraseña es obligatoria", minLength: { value: 6, message: "Mínimo 6 caracteres" } })}
+              {...register('password', { 
+                required: "La contraseña es obligatoria", 
+                minLength: { value: 6, message: "Mínimo 6 caracteres" } 
+              })}
             />
             <span 
-              onClick={() => setShowPassword(!showPassword)} // 5. FUNCIÓN CORREGIDA
+              onClick={() => setShowPassword(!showPassword)}
               style={{
                 position: 'absolute',
                 right: '15px',
@@ -137,10 +140,12 @@ const RegisterForm = () => {
           </div>
           {errors.password && <span className="error-text">{errors.password.message}</span>}
           
-          <select className="form-input" {...register('role')}>
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-          </select>
+          <div className="input-group">
+            <select className="form-input" {...register('role')}>
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
 
           <button 
             type="submit" 
@@ -148,8 +153,8 @@ const RegisterForm = () => {
             disabled={!isValid}
             style={{
               cursor: isValid ? 'pointer' : 'not-allowed',
-              opacity: isValid ? 1 : 0.5,
-              backgroundColor: isValid ? '#6A64F1' : '#ccc',
+              opacity: isValid ? 1 : 0.7,
+              backgroundColor: isValid ? '#6A64F1' : '#a5a2f7',
               color: 'white',
               padding: '12px',
               borderRadius: '8px',
@@ -157,15 +162,35 @@ const RegisterForm = () => {
               width: '100%',
               fontWeight: 'bold',
               fontSize: '16px',
-              marginTop: '10px'
+              marginTop: '10px',
+              transition: 'all 0.3s ease'
             }}
           >
             Registrar
           </button>
+
+          <button 
+            type="button" 
+            onClick={() => navigate('/admin-dashboard')} 
+            style={{ 
+              backgroundColor: '#e2e8f0', 
+              color: '#475569', 
+              border: 'none', 
+              padding: '10px 20px', 
+              borderRadius: '8px', 
+              cursor: 'pointer',  
+              marginTop: '15px', 
+              width: '100%', 
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            Volver al Panel
+          </button>
         </form>
         
-        <div className="signup-text">
-          ¿Ya tiene una cuenta? <a href="/" className="signup-link">Ingrese</a>
+        <div className="signup-text" style={{ marginTop: '20px', textAlign: 'center' }}>
+          ¿Ya tiene una cuenta? <a href="/" className="signup-link" style={{ color: '#6A64F1', fontWeight: 'bold', textDecoration: 'none' }}>Ingrese</a>
         </div>
       </div>
     </div>

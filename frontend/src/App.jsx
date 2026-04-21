@@ -9,6 +9,8 @@ import FormListaCliente from './pages/FormListaClientes';
 import FormListadoCreditos from './pages/FormListadoCreditos';
 import FormAbonosCliente from './pages/FormAbonosCliente';
 import DetalleCliente from './pages/DetalleCliente';
+import Informes from './pages/Informes';
+import CargarDoc from './pages/CargarDoc';
 
 // 🛡️ Componente para proteger rutas según el ROL
 const ProtectedRoute = ({ children, allowedRole }) => {
@@ -71,24 +73,26 @@ function App() {
                 </ProtectedRoute>
           } />
 
-        <Route path="/creditos/cobrador" element={<ProtectedRoute allowedRole="user">
-              <FormListadoCreditos />
-                </ProtectedRoute>
-          } />
+        <Route path="/listado-cobros" element={<ProtectedRoute allowedRole="user">
+          <FormListadoCreditos />
+            </ProtectedRoute>
+        } />
 
         <Route path="/abonos/:idCredito" element={<ProtectedRoute allowedRole="user">
-              <FormAbonosCliente />
-                </ProtectedRoute>
-          } />
+          <FormAbonosCliente />
+            </ProtectedRoute>
+        } />
 
-        {/* <Route path="/creditos/nuevo" element={<ProtectedRoute allowedRole="user">
-             <FormCredito />
-                </ProtectedRoute>
-          } /> */}
+        {/* NUEVA RUTA PARA CARGAR DOCUMENTOS */}
+        <Route path="/cargar-doc" element={<ProtectedRoute allowedRole="user">
+          <CargarDoc />
+            </ProtectedRoute>
+        } />
 
           <Route path="/creditos/nuevo" element={<FormCredito />} />
 
           <Route path="/cliente/detalle/:cedula" element={<DetalleCliente />} />
+          <Route path="/Informes" element={<Informes />} />
 
       </Routes>
     </Router>
@@ -98,4 +102,3 @@ function App() {
 export default App;
 
 
-'/creditos/cobrador'
