@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '../api/auth';
+// CORRECCIÓN: Importación nombrada para que coincida con la estructura de auth.js
+import { authApi } from '../api/auth';
 import Swal from 'sweetalert2';
 
 const DetalleCliente = () => {
@@ -16,7 +17,8 @@ const DetalleCliente = () => {
   const fetchDetalle = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/creditos/cliente/detalle/${cedula}`);
+      // CORRECCIÓN: Uso de authApi con el método específico
+      const response = await authApi.obtenerDetalleClienteExpediente(cedula);
       setData(response.data);
     } catch (error) {
       console.error("Error al cargar detalle:", error);
@@ -48,8 +50,7 @@ const DetalleCliente = () => {
   const indicePrimer = indiceUltimo - creditosPorPagina;
   const creditosActuales = creditos ? creditos.slice(indicePrimer, indiceUltimo) : [];
 
-  // --- AJUSTE DE COBRADOR ---
-  // Buscamos 'cobrador_asignado' en el primer crédito, luego en el cliente, o 'No asignado'
+  // AJUSTE DE COBRADOR
   const cobradorNombre = (creditos && creditos[0]?.cobrador_asignado) || cliente.nombre_cobrador || 'No asignado';
 
   const formatCurrency = (val) => 

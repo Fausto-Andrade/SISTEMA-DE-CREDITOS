@@ -1,197 +1,183 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useForm } from "react-hook-form";
 import { useNavigate } from 'react-router-dom';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaUser, FaEnvelope, FaStore, FaRoute, FaArrowLeft } from 'react-icons/fa';
 import Swal from 'sweetalert2';
-import api from '../api/auth';
+import { authApi, rutasApi, compradoresApi } from '../api/auth';
 
 const RegisterForm = () => {
-  const [errorServer, setErrorServer] = useState('');
-  const [showPassword, setShowPassword] = useState(false); 
+  const [compradores, setCompradores] = useState([]);
+  const [rutas, setRutas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  
-  const { 
-    register, 
-    handleSubmit, 
-    reset,
-    setFocus,
-    formState: { errors, isValid } 
-  } = useForm({
-    mode: "onBlur", 
+
+  const adminId = localStorage.getItem('userId');
+
+  const { register, handleSubmit, reset, setFocus, setValue, watch, formState: { isValid } } = useForm({
+    mode: "onChange",
     defaultValues: {
-      username: "",
-      email: "",
-      password: "",
-      role: "user" 
+      role: "user",
+      id_comprador: "",
+      id_ruta: ""
     }
   });
 
+  const selectedComprador = watch('id_comprador');
+
+  const rutasFiltradas = rutas.filter(r => {
+    const compRuta = Number(r.id_comprador);
+    const compSeleccionado = Number(selectedComprador);
+    return compRuta === compSeleccionado && compSeleccionado !== 0;
+  });
+
+  const cargarConfiguracion = useCallback(async () => {
+    if (!adminId) return;
+    try {
+      setLoading(true);
+      // Traemos también la lista de usuarios para contar cobradores activos
+      const [resPerfil, resComp, resRutas, resUsuarios] = await Promise.all([
+        authApi.obtenerPerfilUsuario(adminId), // Usando el nombre de función corregido
+        compradoresApi.getAll(),
+        rutasApi.getAll(),
+        authApi.obtenerUsuariosRegistrados() 
+      ]);
+
+      const perfil = resPerfil.data;
+      const listaCompradores = Array.isArray(resComp.data) ? resComp.data : [];
+      const listaRutas = Array.isArray(resRutas.data) ? resRutas.data : [];
+      const listaUsuarios = Array.isArray(resUsuarios.data) ? resUsuarios.data : [];
+
+      // --- LÓGICA DE VALIDACIÓN DE LÍMITE DE COBRADORES ---
+      const limitePermitido = parseInt(perfil.max_rutas_permitidas) || 0;
+      const miCompradorId = perfil.id_comprador;
+
+      // Contamos cuántos usuarios con rol 'user' pertenecen a este id_comprador
+      const cobradoresActuales = listaUsuarios.filter(u => 
+        String(u.id_comprador) === String(miCompradorId) && u.role === 'user'
+      ).length;
+
+      if (limitePermitido > 0 && cobradoresActuales >= limitePermitido) {
+        await Swal.fire({
+          title: 'Cupo de Cobradores Lleno',
+          text: `Tu plan permite un máximo de ${limitePermitido} cobradores (uno por ruta) y ya has alcanzado ese límite.`,
+          icon: 'warning',
+          confirmButtonColor: '#633ef1'
+        });
+        navigate('/cobradores');
+        return;
+      }
+      // ---------------------------------------------------
+
+      setCompradores(listaCompradores);
+      setRutas(listaRutas);
+
+      if (perfil && miCompradorId) {
+        setValue('id_comprador', String(miCompradorId), { shouldValidate: true });
+      }
+
+    } catch (error) {
+      console.error("Error cargando configuración:", error);
+      Swal.fire('Error', 'No se pudo validar el cupo de la cuenta', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [adminId, setValue, navigate]);
+
   useEffect(() => {
-    // Reset corregido para limpiar campos al cargar
-    reset({ username: "", email: "", password: "", role: "user" });
     setFocus("username");
-  }, [reset, setFocus]);
-  
+    cargarConfiguracion();
+  }, [cargarConfiguracion, setFocus]);
 
   const onSubmit = async (data) => {
     try {
-      setErrorServer('');
-      
-      const response = await api.post('/register', data);
-      const user = response.data;
+      const payload = { ...data, role: 'user' };
+      await authApi.registro(payload);
 
       Swal.fire({
-        title: '¡Registro Exitoso!',
-        text: `Usuario ${user.username} creado correctamente.`,
+        title: 'Éxito',
+        text: 'Cobrador creado y vinculado a la ruta correctamente',
         icon: 'success',
         timer: 2000,
-        showConfirmButton: false,
-        timerProgressBar: true,
-      }).then(() => {
-        // Redirección basada en el rol del usuario creado
-        if (user.role === 'admin') {
-          navigate('/admin-dashboard');
-        } else {
-          navigate('/home');
-        }
+        showConfirmButton: false
       });
 
+      navigate('/cobradores');
     } catch (error) {
-      console.error("Error en el registro", error);
-      
-      // Capturamos el mensaje específico del backend (ej: "El usuario ya existe")
-      const errorMessage = error.response?.data?.mensaje || error.response?.data?.message || 'Error al conectar con el servidor';
-      setErrorServer(errorMessage);
-
       Swal.fire({
-        title: 'No se pudo registrar',
-        text: errorMessage,
-        icon: 'error',
-        confirmButtonText: 'Reintentar',
-        confirmButtonColor: '#6A64F1'
+        title: 'Error',
+        text: error.response?.data?.mensaje || 'No se pudo completar el registro',
+        icon: 'error'
       });
     }
   };
 
+  const styles = {
+    container: { height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #8f0daf 0%, #2b74e2 100%)', fontFamily: "'Poppins', sans-serif" },
+    glass: { background: 'rgba(255, 255, 255, 0.15)', WebkitBackdropFilter: 'blur(12px)', backdropFilter: 'blur(12px)', borderRadius: '24px', padding: '40px', width: '100%', maxWidth: '400px', textAlign: 'center', color: 'white', border: '1px solid rgba(255, 255, 255, 0.3)' },
+    inputGroup: { position: 'relative', marginBottom: '15px' },
+    input: { width: '100%', padding: '12px 45px 12px 15px', borderRadius: '12px', border: 'none', background: 'white', color: '#333', fontSize: '14px', boxSizing: 'border-box', outline: 'none' },
+    inputReadOnly: { width: '100%', padding: '12px 45px 12px 15px', borderRadius: '12px', border: 'none', background: 'rgba(255, 255, 255, 0.8)', color: '#333', fontSize: '14px', boxSizing: 'border-box', cursor: 'not-allowed', fontWeight: '600' },
+    icon: { position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', color: '#666', fontSize: '18px' },
+    btnPrimary: { width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(90deg, #3498db, #d548f1)', color: 'white', fontWeight: '600', fontSize: '16px', cursor: 'pointer', marginTop: '10px' },
+    btnSecondary: { width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.4)', background: 'transparent', color: 'white', fontSize: '14px', cursor: 'pointer', marginTop: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }
+  };
+
   return (
-    <div className="login-container">
-      <div className="login-box">
-        <h1 className="login-title">Crear una cuenta</h1>
-        
-        {errorServer && (
-          <div className="error-banner" style={{ backgroundColor: '#fee2e2', color: '#b91c1c', padding: '10px', borderRadius: '5px', marginBottom: '15px', textAlign: 'center', fontSize: '14px', border: '1px solid #fecaca' }}>
-            {errorServer}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit(onSubmit)} className="login-form" autoComplete="off">
-          
-          <div className="input-group">
-            <input
-              type="text"
-              placeholder="Nombre"
-              className={`form-input ${errors.username ? 'input-error' : ''}`}
-              {...register('username', { required: "El nombre es obligatorio" })}
-            />
-            {errors.username && <span className="error-text">{errors.username.message}</span>}
+    <div style={styles.container}>
+      <div style={styles.glass}>
+        <h2 style={{ margin: '0 0 10px 0' }}>Registrar Cobrador</h2>
+        <p style={{ fontSize: '0.85rem', opacity: 0.9, marginBottom: '25px' }}>Panel de Administración de Rutas</p>
+
+        <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
+          <div style={styles.inputGroup}>
+            <input {...register('username', { required: true })} placeholder="Nombre de usuario" style={styles.input} />
+            <FaUser style={styles.icon} />
           </div>
 
-          <div className="input-group">
-            <input
-              type="email"
-              placeholder="Correo electrónico"
-              className={`form-input ${errors.email ? 'input-error' : ''}`}
-              {...register('email', { 
-                required: "El correo es obligatorio",
-                pattern: {
-                  value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                  message: "Formato de correo inválido"
-                }
-              })}
-            />
-            {errors.email && <span className="error-text">{errors.email.message}</span>}
+          <div style={styles.inputGroup}>
+            <input {...register('email', { required: true })} type="email" placeholder="Correo electrónico" style={styles.input} />
+            <FaEnvelope style={styles.icon} />
           </div>
 
-          <div className="input-group" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Contraseña"
-              autoComplete="new-password"
-              className={`form-input ${errors.password ? 'input-error' : ''}`}
-              style={{ width: '100%', paddingRight: '40px' }}
-              {...register('password', { 
-                required: "La contraseña es obligatoria", 
-                minLength: { value: 6, message: "Mínimo 6 caracteres" } 
-              })}
-            />
-            <span 
-              onClick={() => setShowPassword(!showPassword)}
-              style={{
-                position: 'absolute',
-                right: '15px',
-                cursor: 'pointer',
-                color: '#636e72',
-                display: 'flex',
-                zIndex: 10
-              }}
-            >
+          <div style={styles.inputGroup}>
+            <input {...register('password', { required: true, minLength: 6 })} type={showPassword ? "text" : "password"} placeholder="Contraseña" style={styles.input} />
+            <span style={{ ...styles.icon, cursor: 'pointer' }} onClick={() => setShowPassword(!showPassword)}>
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </span>
           </div>
-          {errors.password && <span className="error-text">{errors.password.message}</span>}
-          
-          <div className="input-group">
-            <select className="form-input" {...register('role')}>
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
-            </select>
+
+          <div style={styles.inputGroup}>
+            <input
+              type="text"
+              readOnly
+              value={compradores.find(c => String(c.id_comprador) === String(selectedComprador))?.nombre_empresa || "Cargando empresa..."}
+              style={styles.inputReadOnly}
+            />
+            <FaStore style={styles.icon} />
+            <input type="hidden" {...register('id_comprador')} />
           </div>
 
-          <button 
-            type="submit" 
-            className="register-button" 
-            disabled={!isValid}
-            style={{
-              cursor: isValid ? 'pointer' : 'not-allowed',
-              opacity: isValid ? 1 : 0.7,
-              backgroundColor: isValid ? '#6A64F1' : '#a5a2f7',
-              color: 'white',
-              padding: '12px',
-              borderRadius: '8px',
-              border: 'none',
-              width: '100%',
-              fontWeight: 'bold',
-              fontSize: '16px',
-              marginTop: '10px',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            Registrar
+          <div style={styles.inputGroup}>
+            <select {...register('id_ruta', { required: true })} style={{ ...styles.input, appearance: 'none' }}>
+              <option value="">
+                {loading ? "Cargando rutas..." : rutasFiltradas.length > 0 ? "Seleccionar Ruta Destino" : "No hay rutas disponibles"}
+              </option>
+              {rutasFiltradas.map(r => (
+                <option key={r.id_ruta} value={r.id_ruta}>{r.nombre_ruta}</option>
+              ))}
+            </select>
+            <FaRoute style={styles.icon} />
+          </div>
+
+          <button type="submit" disabled={loading || !isValid} style={{ ...styles.btnPrimary, opacity: (loading || !isValid) ? 0.7 : 1 }}>
+            {loading ? "Validando..." : "Crear Cobrador"}
           </button>
 
-          <button 
-            type="button" 
-            onClick={() => navigate('/admin-dashboard')} 
-            style={{ 
-              backgroundColor: '#e2e8f0', 
-              color: '#475569', 
-              border: 'none', 
-              padding: '10px 20px', 
-              borderRadius: '8px', 
-              cursor: 'pointer',  
-              marginTop: '15px', 
-              width: '100%', 
-              fontSize: '14px',
-              fontWeight: '600'
-            }}
-          >
-            Volver al Panel
+          <button type="button" onClick={() => navigate('/cobradores')} style={styles.btnSecondary}>
+            <FaArrowLeft /> Volver al listado
           </button>
         </form>
-        
-        <div className="signup-text" style={{ marginTop: '20px', textAlign: 'center' }}>
-          ¿Ya tiene una cuenta? <a href="/" className="signup-link" style={{ color: '#6A64F1', fontWeight: 'bold', textDecoration: 'none' }}>Ingrese</a>
-        </div>
       </div>
     </div>
   );

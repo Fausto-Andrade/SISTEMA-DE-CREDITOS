@@ -1,46 +1,73 @@
 const express = require('express');
 const router = express.Router();
 const creditosController = require('../controllers/creditosController');
-const { verificarToken } = require('../authMiddleware');
-// const pool = require('../db');
+const clientesController = require('../controllers/clientesController'); 
+const auth = require('../authMiddleware'); 
+const pool = require('../db');
 
-// --- CLIENTES ---
-router.get('/clientes', verificarToken, creditosController.getClientes);
-router.post('/clientes', verificarToken, creditosController.createCliente);
-router.get('/cliente/detalle/:cedula', verificarToken, creditosController.getDetalleCliente);
+// ==========================================
+// SECCIÓN CLIENTES
+// ==========================================
 
-// --- CRÉDITOS ---
+// Usamos clientesController para todo lo relacionado a la entidad Cliente
+router.get('/clientes', auth.verificarToken, clientesController.getClientes); 
+router.post('/clientes/registrar', auth.verificarToken, clientesController.registrarCliente);
 
-router.post('/', verificarToken, creditosController.crearCredito);
-router.get('/creditos/cobrador', verificarToken, creditosController.getCreditosPorCobrador);
-router.get('/detalle/:id', verificarToken, creditosController.getCreditoPorId);
+// AJUSTE CRÍTICO: Estas rutas ahora apuntan a clientesController
+router.get('/clientes-completo', auth.verificarToken, clientesController.getListaMaestraClientes);
+router.get('/lista-maestra', auth.verificarToken, clientesController.getListaMaestraClientes);
 
-// Detalle del cliente y crédito (Movido aquí por lógica de negocio)
-router.get('/clientes/detalle/:cedula', verificarToken, async (req, res) => {
+// ==========================================
+// SECCIÓN CRÉDITOS Y COBRADORES
+// ==========================================
+
+// Ruta específica para cobradores (Lógica directa en el router)
+router.get('/cobrador/:username', auth.verificarToken, async (req, res) => {
+    const { username } = req.params;
     try {
-        const { cedula } = req.params;
-        const clienteRes = await pool.query(`SELECT * FROM clientes WHERE id_cedula = $1`, [cedula]);
-        if (clienteRes.rows.length === 0) return res.status(404).json({ error: "No existe" });
-        
-        const creditosRes = await pool.query(
-            `SELECT cr.*, 
-            (cr.total_pagar - COALESCE((SELECT SUM(monto_abono) FROM abonos_credito WHERE id_credito = cr.id), 0)) as saldo_pendiente
-             FROM creditos cr WHERE cr.cliente_id = $1 ORDER BY cr.fecha_inicio DESC`, [cedula]
-        );
-        res.json({ cliente: clienteRes.rows[0], creditos: creditosRes.rows });
-    } catch (err) {
-        res.status(500).json({ error: "Error servidor" });
+        const query = `
+            SELECT 
+                c.id, 
+                c.numero_credito_cliente,
+                c.monto AS valor_prestamo, 
+                c.total_pagar,
+                c.cuotas,
+                c.frecuencia_cuotas,
+                c.estado, 
+                c.cliente_id,
+                c.interes,
+                cl.name AS cliente_nombre, 
+                cl.apellido AS cliente_apellido,
+                cl.direccion_cobro,
+                cl.barrio_cobro,
+                cl.celular AS telefono_cobro
+            FROM creditos c
+            JOIN clientes cl ON CAST(c.cliente_id AS TEXT) = CAST(cl.id_cedula AS TEXT)
+            WHERE c.cobrador_asignado = $1 
+            AND c.estado != 'Pagado'
+            ORDER BY c.id DESC
+        `;
+        const result = await pool.query(query, [username]);
+        res.json(result.rows);
+    } catch (error) {
+        console.error("Error al obtener créditos del cobrador:", error.message);
+        res.status(500).json({ mensaje: "Error al cargar tus cobros", detalle: error.message });
     }
 });
 
-// --- ABONOS ---
-router.post('/abonos', verificarToken, creditosController.createAbono);
+// Rutas base de créditos (Funciones en creditosController.js)
+router.get('/', auth.verificarToken, creditosController.getCreditosPersonalizados);
+router.post('/', auth.verificarToken, creditosController.crearCredito);
+router.get('/todos', auth.verificarToken, creditosController.getTodosLosCreditos);
 
-// --- RUTAS ---
-router.get('/rutas', verificarToken, creditosController.getRutas);
+// Ruta con parámetro dinámico
+router.get('/detalle/:id', auth.verificarToken, creditosController.getCreditoPorId);
 
-router.get('/cobrador', verificarToken, creditosController.getCreditosPorCobrador);
+// --- HISTORIAL ---
+router.get('/clientes/detalle/:cedula', auth.verificarToken, creditosController.getDetalleCliente);
 
-router.get('/todos', verificarToken, creditosController.getTodosLosCreditos);
+// --- OTROS ---
+router.post('/abonos', auth.verificarToken, creditosController.createAbono);
+router.get('/rutas', auth.verificarToken, creditosController.getRutas);
 
 module.exports = router;

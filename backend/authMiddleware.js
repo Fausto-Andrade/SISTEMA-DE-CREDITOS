@@ -1,15 +1,9 @@
 const jwt = require('jsonwebtoken');
 
-// Verificación de seguridad al cargar el módulo
-if (!process.env.JWT_SECRET) {
-  console.error("❌ ERROR CRÍTICO: JWT_SECRET no definido en el archivo .env");
-  // En producción, esto evita que la app sea vulnerable por falta de llave
-}
-
 const verificarToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   
-  // Soporta tanto si envían solo el token como si envían "Bearer <token>"
+  // Soporta tanto el formato "Bearer <token>" como el token directo
   const token = authHeader && authHeader.startsWith('Bearer ') 
                 ? authHeader.split(' ')[1] 
                 : authHeader;
@@ -20,17 +14,25 @@ const verificarToken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // Datos del payload (id, username, role)
+    
+    // Al asignar 'decoded' a 'req.user', estamos inyectando:
+    // id, username, role e id_comprador en cada petición protegida.
+    req.user = decoded; 
+    
     next();
   } catch (error) {
+    console.error("Error en verificación de token:", error.message);
     return res.status(403).json({ mensaje: "Token inválido o expirado." });
   }
 };
 
+/**
+ * Middleware para restringir acceso solo a personal administrativo.
+ * Permite el paso tanto a 'admin' como a 'super_admin'.
+ */
 const esAdmin = (req, res, next) => {
-  // Verificamos que exista el usuario y que su rol sea admin
-  if (!req.user || req.user.role !== 'admin') {
-    return res.status(403).json({ mensaje: "Permiso denegado. Se requiere nivel de Administrador." });
+  if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'super_admin')) {
+    return res.status(403).json({ mensaje: "Permiso denegado. Se requiere nivel administrativo." });
   }
   next();
 };

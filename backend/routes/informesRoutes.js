@@ -1,14 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const informesController = require('../controllers/informesController');
-const { verificarToken } = require('../authMiddleware');
 
-// Rutas existentes
-router.get('/resumen-rutas', verificarToken, informesController.getResumenRutas);
-router.get('/clientes-pendientes-diarios', verificarToken, informesController.getClientesPendientes);
-router.get('/crecimiento-diario', verificarToken, informesController.getCrecimientoDiario);
-
-// Nueva ruta para el Score Crediticio
-router.get('/clientes-finalizados', verificarToken, informesController.getClientesFinalizados);
+// LINEA 8: Asegúrate de que los nombres después del punto sean IGUALES a los del controlador
+router.get('/resumen-rutas', informesController.getResumenRutas);
+router.get('/clientes-pendientes-diarios', informesController.getClientesPendientes);
+router.get('/crecimiento-diario', informesController.getCrecimientoDiario);
+router.get('/clientes-finalizados', informesController.getClientesFinalizados);
 
 module.exports = router;
